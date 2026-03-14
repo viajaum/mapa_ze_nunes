@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Zé Nunes | Mapa Eleitoral RS</title>
+    
+    <!-- Bibliotecas -->
+    <script src="https://cdn.plot.ly/plotly-3.4.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet.markercluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --vermelho-principal: #8B1E1E;
+            --vermelho-claro: #F5D7D7;
+            --dourado-principal: #D4A017;
+            --dourado-claro: #F8E6B5;
+            --fundo-branco: #FFFFFF;
+            --fundo-cinza-claro: #F8F9FA;
+            --texto-principal: #333333;
+            --texto-secundario: #666666;
+            --borda-clara: #E0E0E0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--fundo-cinza-claro);
+            padding: 0;
+            margin: 0;
+            color: var(--texto-principal);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .info-header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 10px 20px;
+            border-bottom: 2px solid rgba(224, 224, 224, 0.5);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            height: 100px;
+        }
+
+        .info-header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100%;
+            padding-left: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .candidate-flag {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flag-img {
+            width: 90px;
+            height: 75px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .header-textos {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .header-title {
+            font-weight: 600;
+            color: var(--texto-principal);
+            font-size: 1.4em;
+            line-height: 1.2;
+        }
+
+        .header-details {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            color: var(--texto-secundario);
+            font-size: 1em;
+            margin-top: 3px;
+        }
+
+        .header-source {
+            color: var(--vermelho-principal);
+            font-weight: 500;
+        }
+
+        /* Mapa como fundo */
+        .mapa-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            pointer-events: auto;
+        }
+
+        .controles-zoom {
+            position: fixed;
+            top: 110px;
+            right: 10px;
+            z-index: 40;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(5px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(224,224,224,0.5);
+            color: var(--texto-principal);
+        }
+
+        /* Container principal */
+        .container {
+            position: fixed;
+            top: 110px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            gap: 20px;
+        }
+
+        /* Coluna esquerda - ALINHADA NA PARTE INFERIOR */
+        .coluna-esquerda {
+            flex: 2.2;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            align-self: flex-end;
+            height: auto;
+            max-height: calc(100vh - 130px);
+            margin-bottom: 20px;
+            justify-content: flex-end;
+        }
+
+        /* Componente de seleção */
+        .selecao-container {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            pointer-events: auto;
+            width: 40%;
+            margin-left: 0;
+            margin-right: auto;
+            flex-shrink: 0;
+        }
+
+        .selecao-textos {
+            width: 100%;
+        }
+
+        .selecao-municipio {
+            font-weight: 600;
+            color: var(--vermelho-principal);
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.3;
+            text-align: left;
+        }
+
+        .selecao-local {
+            font-weight: 400;
+            color: var(--texto-secundario);
+            font-size: 0.9em;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.3;
+            margin-top: 2px;
+            text-align: left;
+        }
+
+        /* Gráfico de linha */
+        .grafico-linha-container {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 6px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            pointer-events: auto;
+            flex-shrink: 0;
+            width: 40%;
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .grafico-container {
+            height: 100px;
+            width: 100%;
+        }
+
+        /* Container inferior */
+        .container-inferior {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            pointer-events: auto;
+            flex: 0 0 auto;
+            min-height: 0;
+            width: 100%;
+            height: 200px;
+        }
+
+        /* Coluna dos gráficos de pizza */
+        .pizza-coluna {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            height: 100%;
+        }
+
+        .pizza-container {
+            display: flex;
+            flex-direction: row;
+            gap: 6px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .pizza-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 6px;
+            padding: 4px 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chart-container { 
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+        }
+
+        /* Coluna do Top 10 Deputados */
+        .top10-coluna {
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+        }
+
+        .barras-container {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 6px;
+            padding: 4px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .barras-chart-container {
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+        }
+
+        /* Coluna direita */
+        .coluna-direita {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            align-self: flex-end;
+            height: auto;
+            max-height: calc(100vh - 130px);
+            margin-bottom: 20px;
+            justify-content: flex-end;
+        }
+
+        .component {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            padding: 6px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .component-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+            font-weight: 600;
+            color: var(--texto-principal);
+            font-size: 0.9em;
+        }
+
+        /* Slider */
+        .slider-container {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.4);
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            font-size: 0.85em;
+        }
+        
+        .year-display {
+            background: var(--fundo-cinza-claro);
+            color: var(--vermelho-principal);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95em;
+            min-width: 45px;
+            text-align: center;
+            border: 1px solid var(--borda-clara);
+        }
+        
+        input[type=range] {
+            width: 100%;
+            height: 4px;
+            background: var(--borda-clara);
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--vermelho-principal);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin-top: -5px;
+        }
+
+        .ano-marcadores {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: var(--texto-secundario);
+            margin-top: 2px;
+        }
+        
+        /* Listas */
+        .listas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .lista-component {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .lista {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid rgba(224,224,224,0.5);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            font-size: 0.9em;
+        }
+        
+        /* Legenda do mapa */
+        .legenda-mapa {
+            position: fixed;
+            top: 105px;
+            left: 15px;
+            z-index: 35;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 5px 15px;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(224,224,224,0.5);
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            font-size: 0.9em;
+            pointer-events: none;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legenda-cor {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        .search-box {
+            margin-bottom: 4px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid rgba(224,224,224,0.5);
+            border-radius: 4px;
+            font-size: 0.9em;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(5px);
+            color: var(--texto-principal);
+        }
+        
+        .item-lista {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            border-bottom: 1px solid rgba(224,224,224,0.5);
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .item-lista:hover {
+            background: rgba(245, 215, 215, 0.5);
+        }
+        
+        .item-lista.selecionado {
+            background: rgba(248, 230, 181, 0.5);
+            border-left: 3px solid var(--dourado-principal);
+        }
+        
+        .item-votos {
+            background: var(--fundo-cinza-claro);
+            color: var(--vermelho-principal);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 1200px) {
+            .container { 
+                flex-direction: column; 
+                justify-content: flex-start;
+                align-items: center;
+            }
+            .coluna-esquerda, .coluna-direita { 
+                width: 100%; 
+                margin-bottom: 10px;
+            }
+            .container-inferior {
+                flex-direction: column;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mapa como fundo -->
+    <div class="mapa-container">
+        <div id="map"></div>
+        <div class="controles-zoom" id="zoomInfo">
+            <span id="nivelZoom">7</span> | <span id="camadaAtiva">Municípios</span>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <div class="info-header">
+        <div class="info-header-content">
+            <div class="header-left">
+                <div class="candidate-flag">
+                    <img src="zenunes.png" alt="Zé Nunes" class="flag-img">
+                </div>
+                <div class="header-textos">
+                    <div class="header-title">Mapa de Análise das Eleições</div>
+                    <div class="header-details">
+                        <span>Rio Grande do Sul</span>
+                        <span>|</span>
+                        <span class="header-source">Fonte: TSE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Legenda do mapa -->
+    <div class="legenda-mapa">
+        <div class="legenda-item">
+            <span class="legenda-cor" style="background: #ff0000;"></span>
+            <span>Queda</span>
+        </div>
+        <div class="legenda-item">
+            <span class="legenda-cor" style="background: #ffa500;"></span>
+            <span>Estável</span>
+        </div>
+        <div class="legenda-item">
+            <span class="legenda-cor" style="background: #ffff00;"></span>
+            <span>Crescimento</span>
+        </div>
+    </div>
+    
+    <!-- Container principal -->
+    <div class="container">
+        <!-- Coluna Esquerda -->
+        <div class="coluna-esquerda">
+            <!-- Componente de seleção -->
+            <div class="selecao-container" id="selecaoContainer">
+                <div class="selecao-textos">
+                    <div class="selecao-municipio" id="selecaoMunicipio">Rio Grande do Sul</div>
+                    <div class="selecao-local" id="selecaoLocal"></div>
+                </div>
+            </div>
+            
+            <!-- Gráfico de linha -->
+            <div class="grafico-linha-container">
+                <div class="component-header">
+                    <span>Evolução dos votos</span>
+                </div>
+                <div class="grafico-container">
+                    <canvas id="graficoEvolucao"></canvas>
+                </div>
+            </div>
+            
+            <!-- Container inferior -->
+            <div class="container-inferior">
+                <!-- Coluna dos gráficos de pizza -->
+                <div class="pizza-coluna">
+                    <div class="pizza-container">
+                        <div class="pizza-item">
+                            <div class="component-header"><span>Governador</span></div>
+                            <div class="chart-container" id="graficoGovernador"></div>
+                        </div>
+                        
+                        <div class="pizza-item">
+                            <div class="component-header"><span>Senador</span></div>
+                            <div class="chart-container" id="graficoSenador"></div>
+                        </div>
+                        
+                        <div class="pizza-item">
+                            <div class="component-header"><span>Presidente</span></div>
+                            <div class="chart-container" id="graficoPresidente"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Coluna do Top 10 Deputados -->
+                <div class="top10-coluna">
+                    <div class="barras-container">
+                        <div class="component-header">
+                            <span>Top 10 Deputado Estadual</span>
+                        </div>
+                        <div class="barras-chart-container">
+                            <canvas id="graficoBarrasDeputados"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coluna Direita -->
+        <div class="coluna-direita">
+            <!-- Slider -->
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Ano:</span>
+                    <span class="year-display" id="yearDisplay">2022</span>
+                </div>
+                <input type="range" id="yearSlider" min="2014" max="2022" step="4" value="2022">
+                <div class="ano-marcadores">
+                    <span>2014</span>
+                    <span>2018</span>
+                    <span>2022</span>
+                </div>
+            </div>
+            
+            <!-- Listas -->
+            <div class="listas-container">
+                <div class="component lista-component">
+                    <div class="component-header">
+                        <span>Municípios</span>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="buscaMunicipios" placeholder="Buscar...">
+                    </div>
+                    <div class="lista" id="listaMunicipios"></div>
+                </div>
+                
+                <div class="component lista-component">
+                    <div class="component-header">
+                        <span>Locais</span>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="buscaLocais" placeholder="Buscar..." disabled>
+                    </div>
+                    <div class="lista" id="listaLocais"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+            
+    <script>
+        // Estado global
+        const state = {
+            governador: null,
+            senador: null,
+            presidente: null,
+            candidato: null,
+            configCandidatos: null,
+            top10Deputados: null,
+            candidatosDeputados: null,
+            municipios: new Map(),
+            locais: new Map(),
+            municipiosGeo: new Map(),
+            locaisGeo: [],
+            ano: '2022',
+            municipioSelecionado: null,
+            localSelecionado: null,
+            locaisCarregados: false,
+            buscaMunicipios: '',
+            buscaLocais: '',
+            debug: {
+                top10Data: null,
+                deputadosConfig: null,
+                lastError: null
+            }
+        };
+        
+        let map, graficoEvolucao, graficoBarrasDeputados;
+        let camadaMunicipios, clusterLocais;
+        let municipiosCache = [];
+        
+        // Função de debug aprimorada
+        function debugLog(context, data) {
+            console.log(`[DEBUG] ${context}:`, data);
+            
+            // Criar ou atualizar painel de debug
+            let debugPanel = document.getElementById('debugPanel');
+            if (!debugPanel) {
+                debugPanel = document.createElement('div');
+                debugPanel.id = 'debugPanel';
+                debugPanel.style.cssText = `
+                    position: fixed;
+                    bottom: 10px;
+                    right: 10px;
+                    background: rgba(0,0,0,0.8);
+                    color: #0f0;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-family: monospace;
+                    font-size: 12px;
+                    max-width: 400px;
+                    max-height: 300px;
+                    overflow: auto;
+                    z-index: 1000;
+                    border: 1px solid #0f0;
+                    display: none;
+                `;
+                document.body.appendChild(debugPanel);
+                
+                // Botão para mostrar/esconder debug
+                const debugBtn = document.createElement('button');
+                debugBtn.textContent = '🐞 Debug';
+                debugBtn.style.cssText = `
+                    position: fixed;
+                    bottom: 10px;
+                    right: 10px;
+                    z-index: 1001;
+                    background: #333;
+                    color: white;
+                    border: none;
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                `;
+                debugBtn.onclick = () => {
+                    debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+                };
+                document.body.appendChild(debugBtn);
+            }
+            
+            // Adicionar ao painel
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${context}: ${JSON.stringify(data).substring(0, 100)}`;
+            debugPanel.appendChild(entry);
+            debugPanel.scrollTop = debugPanel.scrollHeight;
+        }
+
+        function getAnoAnterior(ano) {
+            if (ano === '2014') return null;
+            if (ano === '2018') return '2014';
+            return '2018';
+        }
+        
+        function getCorPorEvolucao(votosAtual, votosAnterior, ano) {
+            if (ano === '2014' || !votosAnterior) return '#ffa500';
+            
+            const variacao = ((votosAtual - votosAnterior) / votosAnterior) * 100;
+            const percentual = Math.max(-100, Math.min(100, variacao));
+            const t = (percentual + 100) / 200;
+            
+            if (t <= 0.5) {
+                const t2 = t * 2;
+                return `rgb(255, ${Math.round(165 * (1 - t2))}, 0)`;
+            } else {
+                const t2 = (t - 0.5) * 2;
+                return `rgb(255, ${Math.round(165 + (90 * t2))}, 0)`;
+            }
+        }
+        
+        function getTamanhoCirculo(votos, tipo) {
+            if (votos === 0) return 0;
+            
+            if (votos < 50) return 3;
+            if (votos < 150) return 5;
+            if (votos < 350) return 10;
+            if (votos < 600) return 16;
+            if (votos < 900) return 23;
+            if (votos < 1300) return 31;
+            if (votos < 1800) return 40;
+            if (votos < 2500) return 50;
+            if (votos < 3500) return 61;
+            if (votos < 5000) return 73;
+            return 75;
+        }
+
+        // Função getCandidatoInfo para outros cargos
+        function getCandidatoInfo(nomeCompleto, cargo, ano) {
+            debugLog('getCandidatoInfo - Buscando', {
+                nome: nomeCompleto,
+                cargo: cargo,
+                ano: ano
+            });
+            
+            if (!state.configCandidatos) {
+                debugLog('getCandidatoInfo - ERRO', 'state.configCandidatos é null');
+                return null;
+            }
+            
+            // Verifica se existe configuração para o cargo e ano
+            if (state.configCandidatos[cargo] && state.configCandidatos[cargo][ano]) {
+                const candidatosConfig = state.configCandidatos[cargo][ano];
+                
+                debugLog('getCandidatoInfo - Configurações disponíveis', {
+                    cargo: cargo,
+                    ano: ano,
+                    quantidade: candidatosConfig.length
+                });
+                
+                // Itera sobre as configurações
+                for (const config of candidatosConfig) {
+                    // Verifica se config existe e tem as propriedades necessárias
+                    if (!config) continue;
+                    
+                    const nomeConfig = config.nome_completo || '';
+                    const nomeUrna = config.nome_urna || '';
+                    
+                    // Comparação mais segura
+                    if (nomeCompleto.includes(nomeConfig) || 
+                        nomeConfig.includes(nomeCompleto) ||
+                        (nomeUrna && (nomeCompleto.includes(nomeUrna) || nomeUrna.includes(nomeCompleto)))) {
+                        
+                        debugLog('getCandidatoInfo - ENCONTRADO', {
+                            nomeOriginal: nomeCompleto,
+                            nomeConfig: nomeConfig,
+                            nomeUrna: nomeUrna,
+                            config: config
+                        });
+                        
+                        return config;
+                    }
+                }
+            }
+            
+            debugLog('getCandidatoInfo - NÃO ENCONTRADO', nomeCompleto);
+            return null;
+        }
+
+        // Função para extrair votos dos outros cargos
+        function extrairVotosOutrosCargos(dados, cargo) {
+            const votos = [];
+            
+            if (!dados) {
+                console.log(`Dados não carregados para ${cargo}`);
+                return votos;
+            }
+            
+            console.log(`Extraindo votos para ${cargo} no ano ${state.ano}`);
+            
+            // Itera sobre os candidatos
+            for (const [nomeCandidato, infoCandidato] of Object.entries(dados)) {
+                // Verifica se existe dados para o ano selecionado
+                if (infoCandidato.anos && infoCandidato.anos[state.ano]) {
+                    const dadosAno = infoCandidato.anos[state.ano];
+                    let totalVotos = 0;
+                    
+                    // PRIORIDADE 1: Local específico
+                    if (state.localSelecionado && state.municipioSelecionado) {
+                        if (dadosAno.municipios && 
+                            dadosAno.municipios[state.municipioSelecionado] && 
+                            dadosAno.municipios[state.municipioSelecionado].locais &&
+                            dadosAno.municipios[state.municipioSelecionado].locais[state.localSelecionado]) {
+                            totalVotos = dadosAno.municipios[state.municipioSelecionado].locais[state.localSelecionado].votos || 0;
+                        }
+                    }
+                    
+                    // PRIORIDADE 2: Município selecionado
+                    if (totalVotos === 0 && state.municipioSelecionado) {
+                        if (dadosAno.municipios && dadosAno.municipios[state.municipioSelecionado]) {
+                            totalVotos = dadosAno.municipios[state.municipioSelecionado].votos || 0;
+                        }
+                    }
+                    
+                    // PRIORIDADE 3: Estado
+                    if (totalVotos === 0) {
+                        totalVotos = dadosAno.estado || 0;
+                    }
+                    
+                    if (totalVotos > 0) {
+                        console.log(`Candidato ${nomeCandidato} tem ${totalVotos} votos em ${state.ano}`);
+                        
+                        // Busca configuração do candidato
+                        const config = getCandidatoInfo(nomeCandidato, cargo, state.ano);
+                        
+                        let nomeExibicao = nomeCandidato;
+                        let cor = getRandomColor();
+                        
+                        if (config) {
+                            nomeExibicao = config.nome_exibicao || nomeCandidato.split(' ').slice(0, 2).join(' ');
+                            cor = config.cor || getRandomColor();
+                        } else {
+                            nomeExibicao = nomeCandidato.split(' ').slice(0, 2).join(' ');
+                        }
+                        
+                        votos.push({
+                            nome: nomeExibicao,
+                            partido: config?.partido || '',
+                            cor: cor,
+                            votos: totalVotos
+                        });
+                    }
+                }
+            }
+            
+            console.log(`Total de candidatos com votos para ${cargo} em ${state.ano}:`, votos.length);
+            return votos.sort((a, b) => b.votos - a.votos);
+        }
+
+        // Função para extrair votos do Top 10 Deputados com debug
+        function extrairVotosTop10() {
+            debugLog('extrairVotosTop10 - Iniciando', {
+                temTop10: !!state.top10Deputados,
+                ano: state.ano,
+                municipioSelecionado: state.municipioSelecionado,
+                localSelecionado: state.localSelecionado
+            });
+            
+            if (!state.top10Deputados) {
+                debugLog('extrairVotosTop10 - ERRO', 'state.top10Deputados é null');
+                return [];
+            }
+            
+            // Debug: mostrar estrutura do top10
+            debugLog('extrairVotosTop10 - Estrutura top10', {
+                keys: Object.keys(state.top10Deputados),
+                temAno: state.top10Deputados[state.ano] ? 'sim' : 'não'
+            });
+            
+            const ano = state.ano;
+            const dadosAno = state.top10Deputados[ano];
+            if (!dadosAno) {
+                debugLog('extrairVotosTop10 - ERRO', `Sem dados para o ano ${ano}`);
+                return [];
+            }
+            
+            // Debug: mostrar estrutura do ano
+            debugLog('extrairVotosTop10 - Estrutura do ano', {
+                temEstado: !!dadosAno.estado,
+                temMunicipios: !!dadosAno.municipios,
+                municipiosKeys: dadosAno.municipios ? Object.keys(dadosAno.municipios).slice(0, 3) : []
+            });
+            
+            let dadosArray = [];
+            let fonte = '';
+            
+            // PRIORIDADE 1: Local específico
+            if (state.localSelecionado && state.municipioSelecionado) {
+                debugLog('extrairVotosTop10 - Buscando local', {
+                    municipio: state.municipioSelecionado,
+                    local: state.localSelecionado
+                });
+                
+                const municipioData = dadosAno.municipios?.[state.municipioSelecionado];
+                if (municipioData) {
+                    debugLog('extrairVotosTop10 - Dados do município', {
+                        temLocais: !!municipioData.locais,
+                        locaisKeys: municipioData.locais ? Object.keys(municipioData.locais) : []
+                    });
+                    
+                    if (municipioData.locais && municipioData.locais[state.localSelecionado]) {
+                        dadosArray = municipioData.locais[state.localSelecionado];
+                        fonte = 'local';
+                        debugLog('extrairVotosTop10 - Encontrou dados do local', {
+                            tamanho: dadosArray.length,
+                            primeiro: dadosArray[0]
+                        });
+                    }
+                }
+            }
+            
+            // PRIORIDADE 2: Município selecionado
+            if (dadosArray.length === 0 && state.municipioSelecionado) {
+                debugLog('extrairVotosTop10 - Buscando município', {
+                    municipio: state.municipioSelecionado
+                });
+                
+                const municipioData = dadosAno.municipios?.[state.municipioSelecionado];
+                if (municipioData && municipioData.top10) {
+                    dadosArray = municipioData.top10;
+                    fonte = 'municipio';
+                    debugLog('extrairVotosTop10 - Encontrou dados do município', {
+                        tamanho: dadosArray.length,
+                        primeiro: dadosArray[0]
+                    });
+                }
+            }
+            
+            // PRIORIDADE 3: Estado
+            if (dadosArray.length === 0 && dadosAno.estado) {
+                dadosArray = dadosAno.estado;
+                fonte = 'estado';
+                debugLog('extrairVotosTop10 - Usando dados do estado', {
+                    tamanho: dadosArray.length,
+                    primeiro: dadosArray[0]
+                });
+            }
+            
+            debugLog('extrairVotosTop10 - Resultado final', {
+                fonte: fonte,
+                tamanho: dadosArray.length,
+                temDados: dadosArray.length > 0
+            });
+            
+            return dadosArray;
+        }
+
+        // Função para obter informações do deputado com matching melhorado
+        function getDeputadoInfo(nomeCandidato, ano) {
+            debugLog('getDeputadoInfo - Buscando', {
+                candidato: nomeCandidato,
+                ano: ano
+            });
+            
+            if (!state.candidatosDeputados) {
+                debugLog('getDeputadoInfo - ERRO', 'state.candidatosDeputados é null');
+                return null;
+            }
+            
+            debugLog('getDeputadoInfo - Estrutura candidatosDeputados', {
+                temDeputadoEstadual: !!state.candidatosDeputados.deputado_estadual,
+                anosDisponiveis: state.candidatosDeputados.deputado_estadual ? 
+                    Object.keys(state.candidatosDeputados.deputado_estadual) : []
+            });
+            
+            if (!state.candidatosDeputados.deputado_estadual) {
+                return null;
+            }
+            
+            const dadosAno = state.candidatosDeputados.deputado_estadual[ano];
+            if (!dadosAno) {
+                debugLog('getDeputadoInfo - ERRO', `Sem dados para o ano ${ano}`);
+                return null;
+            }
+            
+            debugLog('getDeputadoInfo - Candidatos disponíveis', {
+                quantidade: Object.keys(dadosAno).length,
+                primeiros: Object.keys(dadosAno).slice(0, 5)
+            });
+            
+            // 1. Primeiro tenta correspondência exata
+            if (dadosAno[nomeCandidato]) {
+                debugLog('getDeputadoInfo - ENCONTRADO (exato)', {
+                    nomeOriginal: nomeCandidato,
+                    info: dadosAno[nomeCandidato]
+                });
+                return dadosAno[nomeCandidato];
+            }
+            
+            // 2. Remove acentos e converte para maiúsculas para comparação
+            const nomeNormalizado = nomeCandidato
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toUpperCase()
+                .trim();
+            
+            debugLog('getDeputadoInfo - Nome normalizado', nomeNormalizado);
+            
+            // 3. Primeiro procura por correspondência que inclua nome e sobrenome (mais precisa)
+            const palavrasCandidato = nomeNormalizado.split(' ').filter(p => p.length > 2);
+            
+            // Lista para armazenar possíveis matches com pontuação
+            const matches = [];
+            
+            for (const [nome, info] of Object.entries(dadosAno)) {
+                const nomeConfigNormalizado = nome
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toUpperCase()
+                    .trim();
+                
+                const palavrasConfig = nomeConfigNormalizado.split(' ').filter(p => p.length > 2);
+                
+                // Calcula pontuação de matching
+                let pontuacao = 0;
+                
+                // Verifica se um contém o outro (matching forte)
+                if (nomeNormalizado.includes(nomeConfigNormalizado) || 
+                    nomeConfigNormalizado.includes(nomeNormalizado)) {
+                    pontuacao += 10;
+                }
+                
+                // Conta palavras em comum (matching médio)
+                for (const palavra of palavrasCandidato) {
+                    if (palavrasConfig.includes(palavra)) {
+                        pontuacao += 1;
+                    }
+                }
+                
+                // Verifica sobrenomes (última palavra) - matching muito forte
+                const sobrenomeCandidato = palavrasCandidato[palavrasCandidato.length - 1];
+                const sobrenomeConfig = palavrasConfig[palavrasConfig.length - 1];
+                
+                if (sobrenomeCandidato === sobrenomeConfig && sobrenomeCandidato.length > 2) {
+                    pontuacao += 5;
+                }
+                
+                // Verifica primeiro nome (primeira palavra) - matching forte
+                const primeiroNomeCandidato = palavrasCandidato[0];
+                const primeiroNomeConfig = palavrasConfig[0];
+                
+                if (primeiroNomeCandidato === primeiroNomeConfig && primeiroNomeCandidato.length > 2) {
+                    pontuacao += 3;
+                }
+                
+                if (pontuacao > 0) {
+                    matches.push({
+                        nome: nome,
+                        info: info,
+                        pontuacao: pontuacao,
+                        nomeConfigNormalizado: nomeConfigNormalizado
+                    });
+                }
+            }
+            
+            // Ordena por pontuação (maior primeiro)
+            matches.sort((a, b) => b.pontuacao - a.pontuacao);
+            
+            if (matches.length > 0) {
+                // Verifica se o melhor match tem pontuação significativa
+                if (matches[0].pontuacao >= 5) {
+                    debugLog('getDeputadoInfo - ENCONTRADO (melhor match)', {
+                        nomeOriginal: nomeCandidato,
+                        nomeConfig: matches[0].nome,
+                        pontuacao: matches[0].pontuacao,
+                        info: matches[0].info
+                    });
+                    return matches[0].info;
+                } else {
+                    debugLog('getDeputadoInfo - Matches com pontuação baixa ignorados', {
+                        nomeOriginal: nomeCandidato,
+                        matches: matches.map(m => ({ nome: m.nome, pontuacao: m.pontuacao }))
+                    });
+                }
+            }
+            
+            // 4. Log detalhado para debugging
+            debugLog('getDeputadoInfo - NÃO ENCONTRADO', {
+                nomeBuscado: nomeCandidato,
+                nomeNormalizado: nomeNormalizado,
+                candidatosDisponiveis: Object.keys(dadosAno).slice(0, 10)
+            });
+            
+            return null;
+        }
+
+        // Função para gerar cor gradiente baseada na posição
+        function getCorGradiente(index, total) {
+            const r = 139 - (index * 8);
+            const g = 30 + (index * 12);
+            const b = 30;
+            return `rgb(${Math.max(100, r)}, ${Math.min(180, g)}, ${b})`;
+        }
+
+        // Função para atualizar gráfico de barras com debug
+        function atualizarGraficoBarras() {
+            debugLog('atualizarGraficoBarras - INICIANDO', {
+                ano: state.ano,
+                temTop10: !!state.top10Deputados,
+                temConfigDeputados: !!state.candidatosDeputados
+            });
+            
+            const canvas = document.getElementById('graficoBarrasDeputados');
+            if (!canvas) {
+                debugLog('atualizarGraficoBarras - ERRO', 'Canvas não encontrado');
+                return;
+            }
+            
+            if (!state.top10Deputados) {
+                debugLog('atualizarGraficoBarras - ERRO', 'state.top10Deputados não carregado');
+                return;
+            }
+            
+            const dadosArray = extrairVotosTop10();
+            debugLog('atualizarGraficoBarras - dadosArray recebido', {
+                length: dadosArray.length,
+                isEmpty: dadosArray.length === 0,
+                primeiro: dadosArray[0]
+            });
+            
+            if (!dadosArray || dadosArray.length === 0) {
+                debugLog('atualizarGraficoBarras - Sem dados', 'Mostrando mensagem de erro');
+                if (graficoBarrasDeputados) graficoBarrasDeputados.destroy();
+                const ctx = canvas.getContext('2d');
+                graficoBarrasDeputados = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Sem dados para ' + state.ano],
+                        datasets: [{
+                            data: [0],
+                            backgroundColor: ['#ccc']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+                return;
+            }
+            
+            const top10 = dadosArray.slice(0, 10);
+            debugLog('atualizarGraficoBarras - Top 10', top10);
+            
+            // Criar array com informações completas para cada candidato
+            const candidatosInfo = top10.map((d, index) => {
+                debugLog(`Processando candidato ${index}`, {
+                    nome: d.candidato,
+                    votos: d.votos
+                });
+                
+                if (d.candidato === "VOTO BRANCO") {
+                    return {
+                        nomeExibicao: "Brancos",
+                        partido: "",
+                        votos: d.votos
+                    };
+                }
+                if (d.candidato === "VOTO NULO") {
+                    return {
+                        nomeExibicao: "Nulos",
+                        partido: "",
+                        votos: d.votos
+                    };
+                }
+                
+                const info = getDeputadoInfo(d.candidato, state.ano);
+                
+                if (info) {
+                    debugLog(`Candidato ${index} ENCONTRADO na config`, {
+                        nomeOriginal: d.candidato,
+                        nomeExibicao: info.nome_exibicao,
+                        partido: info.partido,
+                        cor: info.cor
+                    });
+                } else {
+                    debugLog(`Candidato ${index} NÃO ENCONTRADO na config, usando fallback`, {
+                        nomeOriginal: d.candidato
+                    });
+                }
+                
+                return {
+                    nomeExibicao: info?.nome_exibicao || d.candidato.split(' ').slice(0, 2).join(' '),
+                    partido: info?.partido || '',
+                    votos: d.votos
+                };
+            });
+            
+            debugLog('atualizarGraficoBarras - candidatosInfo', candidatosInfo);
+            
+            const labels = candidatosInfo.map(info => info.nomeExibicao);
+            const valores = candidatosInfo.map(info => info.votos);
+            
+            // Define as cores baseado nas configurações ou gradiente
+            const cores = top10.map((d, i) => {
+                if (d.candidato === "VOTO BRANCO") return "#999999";
+                if (d.candidato === "VOTO NULO") return "#666666";
+                
+                // Tenta buscar a cor da configuração
+                const info = getDeputadoInfo(d.candidato, state.ano);
+                if (info && info.cor && info.cor !== "#888888") {
+                    debugLog('atualizarGraficoBarras - Usando cor configurada', {
+                        candidato: d.candidato,
+                        cor: info.cor
+                    });
+                    return info.cor;
+                }
+                
+                // Fallback: usa gradiente baseado na posição
+                const corGradiente = getCorGradiente(i, top10.length);
+                debugLog('atualizarGraficoBarras - Usando gradiente', {
+                    candidato: d.candidato,
+                    indice: i,
+                    cor: corGradiente
+                });
+                return corGradiente;
+            });
+            
+            debugLog('atualizarGraficoBarras - cores', cores);
+            
+            if (graficoBarrasDeputados) {
+                graficoBarrasDeputados.destroy();
+            }
+            
+            const ctx = canvas.getContext('2d');
+            graficoBarrasDeputados = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: valores,
+                        backgroundColor: cores,
+                        borderColor: 'rgba(255,255,255,0.5)',
+                        borderWidth: 1,
+                        borderRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                // Título do tooltip: mostra o nome de exibição
+                                title: (context) => {
+                                    const index = context[0].dataIndex;
+                                    return candidatosInfo[index].nomeExibicao;
+                                },
+                                // Label do tooltip: mostra votos e partido
+                                label: (context) => {
+                                    const index = context.dataIndex;
+                                    const info = candidatosInfo[index];
+                                    let label = `${info.votos.toLocaleString('pt-BR')} votos`;
+                                    if (info.partido) {
+                                        label += ` (${info.partido})`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                callback: (value) => value.toLocaleString('pt-BR'),
+                                font: { size: 8 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 30,
+                                minRotation: 30,
+                                font: { size: 7 }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            debugLog('atualizarGraficoBarras - FINALIZADO', 'Gráfico criado com sucesso');
+        }
+
+        // Função auxiliar para gerar cor aleatória
+        function getRandomColor() {
+            const colors = ['#8B1E1E', '#D4A017', '#1E5F8B', '#2E8B57', '#8B4513', '#4B0082', '#FF1493', '#20B2AA', '#C71585', '#4682B4'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Função para atualizar tudo quando o ano mudar
+        function atualizarTudo() {
+            console.log('Executando atualizarTudo para o ano:', state.ano);
+            
+            // Atualiza o mapa (com tratamento de erro)
+            try {
+                atualizarMapa();
+            } catch (e) {
+                console.error('Erro ao atualizar mapa:', e);
+            }
+            
+            // Atualiza o gráfico de evolução
+            try {
+                if (state.municipioSelecionado && state.localSelecionado) {
+                    atualizarEvolucaoLocal(state.municipioSelecionado, state.localSelecionado);
+                } else {
+                    atualizarEvolucao();
+                }
+            } catch (e) {
+                console.error('Erro ao atualizar evolução:', e);
+            }
+            
+            // Atualiza os gráficos de pizza
+            try {
+                atualizarGraficos();
+            } catch (e) {
+                console.error('Erro ao atualizar gráficos:', e);
+            }
+            
+            // Atualiza as listas
+            try {
+                atualizarListaMunicipios();
+                if (state.municipioSelecionado) {
+                    atualizarListaLocais(state.municipioSelecionado);
+                }
+            } catch (e) {
+                console.error('Erro ao atualizar listas:', e);
+            }
+        }
+
+        async function carregarDados() {
+            try {
+                console.log('Carregando dados...');
+                
+                const [gov, sen, pres, cand, config, top10, deputadosConfig] = await Promise.all([
+                    fetch('dados_governador.json').then(r => r.json()),
+                    fetch('dados_senador.json').then(r => r.json()),
+                    fetch('dados_presidente_rs.json').then(r => r.json()),
+                    fetch('candidato_13500_RS.json').then(r => r.json()),
+                    fetch('candidatos_config.json').then(r => r.json()),
+                    fetch('top10_deputado_estadual_RS.json').then(r => r.json()),
+                    fetch('candidatos_deputado_estadual_RS.json').then(r => r.json())
+                ]);
+
+                console.log('Dados carregados com sucesso');
+                
+                // Log detalhado dos dados carregados
+                debugLog('Dados carregados - Top10 Deputados', {
+                    keys: Object.keys(top10),
+                    estrutura: top10
+                });
+                
+                debugLog('Dados carregados - Config Deputados', {
+                    estrutura: deputadosConfig
+                });
+                
+                Object.assign(state, { 
+                    governador: gov, 
+                    senador: sen, 
+                    presidente: pres, 
+                    candidato: cand, 
+                    configCandidatos: config,
+                    top10Deputados: top10,
+                    candidatosDeputados: deputadosConfig
+                });
+                
+                const municipiosText = await fetch('municipios_RS_geocodificado.csv').then(r => r.text());
+                Papa.parse(municipiosText, {
+                    header: true,
+                    complete: (results) => {
+                        results.data.forEach(m => {
+                            if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
+                                // Verifica se as coordenadas são válidas
+                                const lat = parseFloat(m.LATITUDE);
+                                const lon = parseFloat(m.LONGITUDE);
+                                
+                                if (!isNaN(lat) && !isNaN(lon)) {
+                                    state.municipiosGeo.set(m.CD_MUNICIPIO, {
+                                        nome: m.NM_MUNICIPIO,
+                                        lat: lat,
+                                        lon: lon
+                                    });
+                                    state.municipios.set(m.CD_MUNICIPIO, m.NM_MUNICIPIO);
+                                }
+                            }
+                        });
+                        processarLocais();
+                        initMapa();
+                        
+                        // Pequeno atraso para garantir que tudo está carregado
+                        setTimeout(() => {
+                            atualizarListaMunicipios();
+                            selecionarEstadoInicial();
+                        }, 100);
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                debugLog('ERRO ao carregar dados', error.message);
+            }
+        }
+        
+        async function processarLocais() {
+            try {
+                const locaisText = await fetch('locais_votacao_RS_geocodificado.csv').then(r => r.text());
+                Papa.parse(locaisText, {
+                    header: true,
+                    complete: (results) => {
+                        state.locaisGeo = results.data.filter(l => {
+                            const lat = parseFloat(l.LATITUDE);
+                            const lon = parseFloat(l.LONGITUDE);
+                            return !isNaN(lat) && !isNaN(lon);
+                        });
+                        
+                        results.data.forEach(l => {
+                            if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
+                                if (!state.locais.has(l.CD_MUNICIPIO)) {
+                                    state.locais.set(l.CD_MUNICIPIO, []);
+                                }
+                                state.locais.get(l.CD_MUNICIPIO).push({ 
+                                    codigo: l.NR_LOCAL_VOTACAO, 
+                                    nome: l.NM_LOCAL 
+                                });
+                            }
+                        });
+                        state.locaisCarregados = true;
+                        if (map) atualizarMapa();
+                    }
+                });
+            } catch (error) {
+                console.warn('Erro ao carregar locais');
+            }
+        }
+        
+        function initMapa() {
+            map = L.map("map").setView([-30.5, -53], 7);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+            
+            camadaMunicipios = L.layerGroup().addTo(map);
+            clusterLocais = L.markerClusterGroup({ maxClusterRadius: 35 });
+            
+            map.on('click', (e) => {
+                let clicouEmMarcador = false;
+                camadaMunicipios.eachLayer(layer => {
+                    if (layer instanceof L.CircleMarker && layer.getLatLng().distanceTo(e.latlng) < layer.options.radius + 6) {
+                        clicouEmMarcador = true;
+                    }
+                });
+                if (!clicouEmMarcador) limparSelecao();
+            });
+            
+            map.on('zoomend', () => {
+                const zoom = map.getZoom();
+                document.getElementById('nivelZoom').textContent = zoom;
+                if (zoom >= 11) {
+                    map.removeLayer(camadaMunicipios);
+                    map.addLayer(clusterLocais);
+                    document.getElementById('camadaAtiva').textContent = 'Locais';
+                } else {
+                    map.removeLayer(clusterLocais);
+                    map.addLayer(camadaMunicipios);
+                    document.getElementById('camadaAtiva').textContent = 'Municípios';
+                }
+            });
+            
+            atualizarMapa();
+        }
+        
+        function atualizarMapa() {
+            if (!map || !state.candidato) return;
+            
+            camadaMunicipios.clearLayers();
+            clusterLocais.clearLayers();
+            
+            const anoAnterior = getAnoAnterior(state.ano);
+            
+            // MUNICÍPIOS
+            state.municipiosGeo.forEach((geo, cod) => {
+                try {
+                    // Verifica se as coordenadas são válidas
+                    if (isNaN(geo.lat) || isNaN(geo.lon)) {
+                        console.warn(`Coordenadas inválidas para município ${geo.nome}:`, geo);
+                        return;
+                    }
+                    
+                    const votos = state.candidato.anos[state.ano]?.municipios[cod]?.votos || 0;
+                    if (votos > 0) {
+                        const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[cod]?.votos || 0) : 0;
+                        
+                        L.circleMarker([geo.lat, geo.lon], {
+                            radius: getTamanhoCirculo(votos, 'municipio'),
+                            color: '#333', weight: 1,
+                            fillColor: getCorPorEvolucao(votos, votosAnt, state.ano),
+                            fillOpacity: 0.8
+                        }).addTo(camadaMunicipios)
+                        .bindPopup(`<b>${geo.nome}</b><br>${state.ano}: ${votos.toLocaleString()} votos`)
+                        .on('click', () => selecionarMunicipio(cod, geo.nome));
+                    }
+                } catch (e) {
+                    console.error(`Erro ao adicionar município ${geo.nome}:`, e);
+                }
+            });
+            
+            // LOCAIS
+            if (state.locaisCarregados) {
+                state.locaisGeo.forEach(l => {
+                    try {
+                        const lat = parseFloat(l.LATITUDE);
+                        const lon = parseFloat(l.LONGITUDE);
+                        
+                        if (isNaN(lat) || isNaN(lon)) return;
+                        
+                        const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                        if (votos > 0) {
+                            const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0) : 0;
+                            
+                            L.circleMarker([lat, lon], {
+                                radius: getTamanhoCirculo(votos, 'local'),
+                                color: '#333', weight: 1,
+                                fillColor: getCorPorEvolucao(votos, votosAnt, state.ano),
+                                fillOpacity: 0.7
+                            }).addTo(clusterLocais)
+                            .bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos.toLocaleString()}`)
+                            .on('click', () => selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO));
+                        }
+                    } catch (e) {
+                        console.error('Erro ao adicionar local:', e);
+                    }
+                });
+            }
+            
+            map.fire('zoomend');
+        }
+        
+        function atualizarTituloSelecao() {
+            const municipioEl = document.getElementById('selecaoMunicipio');
+            const localEl = document.getElementById('selecaoLocal');
+            
+            if (!municipioEl || !localEl) return;
+            
+            if (state.localSelecionado && state.municipioSelecionado) {
+                const local = state.locaisGeo.find(l => 
+                    l.CD_MUNICIPIO === state.municipioSelecionado && 
+                    l.NR_LOCAL_VOTACAO === state.localSelecionado
+                );
+                const nomeLocal = local ? local.NM_LOCAL : 'Local';
+                const nomeMun = state.municipios.get(state.municipioSelecionado);
+                
+                municipioEl.textContent = nomeMun;
+                localEl.textContent = nomeLocal;
+                localEl.style.display = 'block';
+                
+            } else if (state.municipioSelecionado) {
+                const nomeMun = state.municipios.get(state.municipioSelecionado);
+                municipioEl.textContent = nomeMun;
+                localEl.style.display = 'none';
+                
+            } else {
+                municipioEl.textContent = 'Rio Grande do Sul';
+                localEl.style.display = 'none';
+            }
+        }
+        
+        function selecionarEstadoInicial() {
+            const municipioEl = document.getElementById('selecaoMunicipio');
+            const localEl = document.getElementById('selecaoLocal');
+            
+            if (municipioEl) municipioEl.textContent = 'Rio Grande do Sul';
+            if (localEl) localEl.style.display = 'none';
+            
+            // Pequeno atraso para garantir que os dados estão prontos
+            setTimeout(() => {
+                atualizarEvolucao();
+                atualizarGraficos();
+                atualizarListaMunicipios();
+            }, 50);
+        }
+        
+        function selecionarMunicipio(cod, nome) {
+            state.municipioSelecionado = cod;
+            state.localSelecionado = null;
+            document.getElementById('buscaLocais').disabled = false;
+            document.getElementById('buscaLocais').value = '';
+            state.buscaLocais = '';
+            atualizarEvolucao();
+            atualizarListaLocais(cod);
+            atualizarTituloSelecao();
+            atualizarListaMunicipios();
+            atualizarGraficos();
+        }
+        
+        function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
+            state.municipioSelecionado = codMun;
+            state.localSelecionado = codLocal;
+            
+            const local = state.locaisGeo.find(l => l.CD_MUNICIPIO === codMun && l.NR_LOCAL_VOTACAO === codLocal);
+            if (local && local.LATITUDE) {
+                const lat = parseFloat(local.LATITUDE);
+                const lon = parseFloat(local.LONGITUDE);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    map.setView([lat, lon], 16, { animate: true });
+                }
+            }
+            
+            document.getElementById('buscaLocais').disabled = false;
+            document.getElementById('buscaLocais').value = '';
+            state.buscaLocais = '';
+            atualizarListaLocais(codMun);
+            atualizarEvolucaoLocal(codMun, codLocal);
+            atualizarTituloSelecao();
+            atualizarGraficos();
+            atualizarListaMunicipios();
+        }
+        
+        function limparSelecao() {
+            state.municipioSelecionado = null;
+            state.localSelecionado = null;
+            document.getElementById('buscaLocais').disabled = true;
+            document.getElementById('buscaLocais').value = '';
+            state.buscaLocais = '';
+            atualizarEvolucao();
+            atualizarListaLocais(null);
+            atualizarListaMunicipios();
+            atualizarGraficos();
+            atualizarTituloSelecao();
+        }
+        
+        function atualizarEvolucao() {
+            if (!state.candidato) return;
+            let v2014, v2018, v2022;
+            if (state.municipioSelecionado) {
+                v2014 = state.candidato.anos['2014']?.municipios[state.municipioSelecionado]?.votos || 0;
+                v2018 = state.candidato.anos['2018']?.municipios[state.municipioSelecionado]?.votos || 0;
+                v2022 = state.candidato.anos['2022']?.municipios[state.municipioSelecionado]?.votos || 0;
+            } else {
+                v2014 = state.candidato.anos['2014']?.estado || 0;
+                v2018 = state.candidato.anos['2018']?.estado || 0;
+                v2022 = state.candidato.anos['2022']?.estado || 0;
+            }
+            criarGraficoEvolucao(v2014, v2018, v2022);
+        }
+        
+        function atualizarEvolucaoLocal(codMun, codLocal) {
+            const v2014 = state.candidato.anos['2014']?.municipios[codMun]?.locais?.[codLocal]?.votos || 0;
+            const v2018 = state.candidato.anos['2018']?.municipios[codMun]?.locais?.[codLocal]?.votos || 0;
+            const v2022 = state.candidato.anos['2022']?.municipios[codMun]?.locais?.[codLocal]?.votos || 0;
+            criarGraficoEvolucao(v2014, v2018, v2022);
+        }
+        
+        function criarGraficoEvolucao(v2014, v2018, v2022) {
+            if (graficoEvolucao) graficoEvolucao.destroy();
+            graficoEvolucao = new Chart(document.getElementById('graficoEvolucao'), {
+                type: 'line',
+                data: {
+                    labels: ['2014', '2018', '2022'],
+                    datasets: [{
+                        data: [v2014, v2018, v2022],
+                        borderColor: '#8B1E1E',
+                        backgroundColor: 'rgba(139, 30, 30, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#8B1E1E',
+                        pointBorderColor: '#FFFFFF',
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+        
+        function atualizarListaMunicipios() {
+            const lista = document.getElementById('listaMunicipios');
+            if (!lista) return;
+            
+            if (!state.candidato) {
+                lista.innerHTML = '<div class="item-lista">Carregando...</div>';
+                return;
+            }
+            
+            municipiosCache = [];
+            state.municipiosGeo.forEach((geo, cod) => {
+                const votos = state.candidato.anos[state.ano]?.municipios[cod]?.votos || 0;
+                if (votos > 0) {
+                    municipiosCache.push({ 
+                        cod, 
+                        nome: geo.nome, 
+                        votos, 
+                        lat: geo.lat, 
+                        lon: geo.lon 
+                    });
+                }
+            });
+            
+            let filtrados = municipiosCache;
+            if (state.buscaMunicipios) {
+                filtrados = municipiosCache.filter(m => m.nome.toLowerCase().includes(state.buscaMunicipios.toLowerCase()));
+            }
+            
+            filtrados.sort((a, b) => b.votos - a.votos);
+            
+            if (filtrados.length === 0) {
+                lista.innerHTML = '<div class="item-lista">Nenhum município encontrado</div>';
+                return;
+            }
+            
+            lista.innerHTML = filtrados.slice(0, 12).map(m => `
+                <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
+                    onclick="map.setView([${m.lat}, ${m.lon}], 11); selecionarMunicipio('${m.cod}', '${m.nome}')">
+                    <span class="item-nome">${m.nome}</span>
+                    <span class="item-votos">${m.votos.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+        
+        function atualizarListaLocais(codMun) {
+            const lista = document.getElementById('listaLocais');
+            if (!lista) return;
+            
+            if (!codMun) {
+                lista.innerHTML = '<div class="item-lista">Selecione um município</div>';
+                return;
+            }
+            
+            const locais = [];
+            state.locaisGeo.forEach(l => {
+                if (l.CD_MUNICIPIO !== codMun) return;
+                const votos = state.candidato.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                if (votos > 0) {
+                    locais.push({
+                        cod: l.NR_LOCAL_VOTACAO,
+                        nome: l.NM_LOCAL,
+                        votos,
+                        lat: parseFloat(l.LATITUDE),
+                        lon: parseFloat(l.LONGITUDE)
+                    });
+                }
+            });
+            
+            if (locais.length === 0) {
+                lista.innerHTML = '<div class="item-lista">Nenhum local com votos</div>';
+                return;
+            }
+            
+            let filtrados = locais;
+            if (state.buscaLocais) {
+                filtrados = locais.filter(l => l.nome.toLowerCase().includes(state.buscaLocais.toLowerCase()));
+            }
+            
+            filtrados.sort((a, b) => b.votos - a.votos);
+            lista.innerHTML = filtrados.slice(0, 8).map(l => `
+                <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
+                    onclick="map.setView([${l.lat}, ${l.lon}], 16); selecionarLocal('${codMun}', '${l.cod}', '${l.nome}', '${state.municipios.get(codMun)}')">
+                    <span class="item-nome">${l.nome}</span>
+                    <span class="item-votos">${l.votos.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+        
+        function atualizarGraficos() {
+            if (!state.governador || !state.senador || !state.presidente) return;
+            
+            console.log('Atualizando gráficos de pizza para o ano:', state.ano);
+            
+            ['governador', 'senador', 'presidente'].forEach((cargo, i) => {
+                const votos = extrairVotosOutrosCargos(state[cargo], cargo);
+                const id = ['graficoGovernador', 'graficoSenador', 'graficoPresidente'][i];
+                
+                const container = document.getElementById(id);
+                if (!container) return;
+                
+                if (votos.length > 0) {
+                    Plotly.newPlot(id, [{
+                        type: 'pie',
+                        labels: votos.slice(0, 5).map(v => v.nome),
+                        values: votos.slice(0, 5).map(v => v.votos),
+                        marker: { 
+                            colors: votos.slice(0, 5).map(v => v.cor)
+                        },
+                        textinfo: 'percent',
+                        textposition: 'inside',
+                        textfont: { color: 'white', size: 8 },
+                        hoverinfo: 'label+percent+value',
+                        hovertemplate: '%{label}<br>%{value:,.0f} votos (%{percent})<extra></extra>'
+                    }], { 
+                        height: 100, 
+                        margin: { t: 2, b: 2, l: 2, r: 2 }, 
+                        showlegend: false,
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0)'
+                    });
+                } else {
+                    Plotly.newPlot(id, [{
+                        type: 'pie',
+                        labels: ['Sem dados'],
+                        values: [1],
+                        marker: { colors: ['#CCCCCC'] },
+                        textinfo: 'none',
+                        hoverinfo: 'none'
+                    }], { 
+                        height: 100, 
+                        margin: { t: 2, b: 2, l: 2, r: 2 }, 
+                        showlegend: false,
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0)'
+                    });
+                }
+            });
+            
+            atualizarListaMunicipios();
+            if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
+            
+            atualizarGraficoBarras();
+        }
+        
+        // EVENT LISTENER DO SLIDER
+        document.getElementById('yearSlider').addEventListener('input', function(e) {
+            state.ano = e.target.value;
+            document.getElementById('yearDisplay').textContent = state.ano;
+            municipiosCache = [];
+            
+            console.log('Ano alterado para:', state.ano);
+            
+            // Chama a função que atualiza tudo
+            atualizarTudo();
+        });
+        
+        document.getElementById('buscaMunicipios').addEventListener('input', e => {
+            state.buscaMunicipios = e.target.value;
+            atualizarListaMunicipios();
+        });
+        
+        document.getElementById('buscaLocais').addEventListener('input', e => {
+            state.buscaLocais = e.target.value;
+            if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
+        });
+        
+        function garantirSliderEm2022() {
+            const slider = document.getElementById('yearSlider');
+            if (slider) {
+                slider.value = 2022;
+                document.getElementById('yearDisplay').textContent = '2022';
+                state.ano = '2022';
+                slider.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+        
+        window.onload = function() {
+            carregarDados();
+            
+            setTimeout(garantirSliderEm2022, 100);
+            setTimeout(garantirSliderEm2022, 500);
+            setTimeout(garantirSliderEm2022, 1000);
+            
+            setTimeout(() => {
+                if (state.candidato) {
+                    selecionarEstadoInicial();
+                } else {
+                    setTimeout(selecionarEstadoInicial, 2000);
+                }
+            }, 1500);
+        };
+    </script>
+</body>
+</html>

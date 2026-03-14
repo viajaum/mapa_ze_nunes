@@ -1,0 +1,677 @@
+{
+  "governador": {
+    "2014": [
+      {
+        "nome_completo": "JOSÉ IVO SARTORI",
+        "nome_exibicao": "José Ivo Sartori",
+        "partido": "MDB",
+        "numero": 15,
+        "cor": "#5CE61F"
+      },
+      {
+        "nome_completo": "TARSO FERNANDO HERZ GENRO",
+        "nome_exibicao": "Tarso Genro",
+        "partido": "PT",
+        "numero": 13,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "ANA AMELIA DE LEMOS",
+        "nome_exibicao": "Ana Amélia Lemos",
+        "partido": "PP",
+        "numero": 11,
+        "cor": "#2FE6BF"
+      },
+      {
+        "nome_completo": "CARLOS ROBERTO DE SOUZA ROBAINA",
+        "nome_exibicao": "Roberto Robaina",
+        "partido": "PSOL",
+        "numero": 50,
+        "cor": "#B83615"
+      },
+      {
+        "nome_completo": "CARLOS EDUARDO VIEIRA DA CUNHA",
+        "nome_exibicao": "Vieira da Cunha",
+        "partido": "PDT",
+        "numero": 12,
+        "cor": "#7F5DAC"
+      },
+      {
+        "nome_completo": "EDISON ESTIVALETE BILHALVA",
+        "nome_exibicao": "Edison Estivalete",
+        "partido": "PRTB",
+        "numero": 28,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "HUMBERTO SETEMBRINO CORREA CARVALHO",
+        "nome_exibicao": "Humberto Setembrino",
+        "partido": "PCB",
+        "numero": 21,
+        "cor": "#CC2040"
+      }
+    ],
+    "2018": [
+      {
+        "nome_completo": "EDUARDO FIGUEIREDO CAVALHEIRO LEITE",
+        "nome_exibicao": "Eduardo Leite",
+        "partido": "PSDB",
+        "numero": 45,
+        "cor": "#2F60E6"
+      },
+      {
+        "nome_completo": "JOSÉ IVO SARTORI",
+        "nome_exibicao": "José Ivo Sartori",
+        "partido": "MDB",
+        "numero": 15,
+        "cor": "#5CE61F"
+      },
+      {
+        "nome_completo": "MIGUEL SOLDATELLI ROSSETTO",
+        "nome_exibicao": "Miguel Rossetto",
+        "partido": "PT",
+        "numero": 13,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "CARLOS ROBERTO DE SOUZA ROBAINA",
+        "nome_exibicao": "Roberto Robaina",
+        "partido": "PSOL",
+        "numero": 50,
+        "cor": "#B83615"
+      },
+      {
+        "nome_completo": "JAIRO JORGE DA SILVA",
+        "nome_exibicao": "Jairo Jorge",
+        "partido": "PDT",
+        "numero": 12,
+        "cor": "#7F5DAC"
+      },
+      {
+        "nome_completo": "MATEUS AFFONSO BANDEIRA",
+        "nome_exibicao": "Mateus Bandeira",
+        "partido": "NOVO",
+        "numero": 30,
+        "cor": "#BD6F00"
+      },
+      {
+        "nome_completo": "JULIO CEZAR LEIRIAS FLORES",
+        "nome_exibicao": "Julio Flores",
+        "partido": "PSTU",
+        "numero": 16,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "PAULO DE OLIVEIRA MEDEIROS",
+        "nome_exibicao": "Paulo Medeiros",
+        "partido": "PCO",
+        "numero": 29,
+        "cor": "#CC2040"
+      }
+    ],
+    "2022": [
+      {
+        "nome_completo": "EDUARDO FIGUEIREDO CAVALHEIRO LEITE",
+        "nome_exibicao": "Eduardo Leite",
+        "partido": "PSDB",
+        "numero": 45,
+        "cor": "#2F60E6"
+      },
+      {
+        "nome_completo": "ONYX DORNELLES LORENZONI",
+        "nome_exibicao": "Onyx Lorenzoni",
+        "partido": "PL",
+        "numero": 22,
+        "cor": "#A39A10"
+      },
+      {
+        "nome_completo": "JOÃO EDEGAR PRETTO",
+        "nome_exibicao": "Edegar Pretto",
+        "partido": "PT",
+        "numero": 13,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "LUIS CARLOS HEINZE",
+        "nome_exibicao": "Luis Carlos Heinze",
+        "partido": "PP",
+        "numero": 11,
+        "cor": "#2FE6BF"
+      },
+      {
+        "nome_completo": "ROBERTO ARGENTA",
+        "nome_exibicao": "Roberto Argenta",
+        "partido": "PSC",
+        "numero": 20,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "CARLOS EDUARDO VIEIRA DA CUNHA",
+        "nome_exibicao": "Vieira da Cunha",
+        "partido": "PDT",
+        "numero": 12,
+        "cor": "#7F5DAC"
+      },
+      {
+        "nome_completo": "RICARDO MUNARSKI JOBIM",
+        "nome_exibicao": "Ricardo Jobim",
+        "partido": "NOVO",
+        "numero": 30,
+        "cor": "#BD6F00"
+      },
+      {
+        "nome_completo": "VICENTE JOAQUIM BOGO",
+        "nome_exibicao": "Vicente Bogo",
+        "partido": "PSB",
+        "numero": 40,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "REJANE SILVA DE OLIVEIRA",
+        "nome_exibicao": "Rejane Oliveira",
+        "partido": "PSTU",
+        "numero": 16,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "CARLOS MESSALLA LIMA DA ROSA",
+        "nome_exibicao": "Carlos Lima",
+        "partido": "PCB",
+        "numero": 21,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "CESAR AUGUSTO PONTES FERREIRA",
+        "nome_exibicao": "Cesar Ferreira",
+        "partido": "PCO",
+        "numero": 29,
+        "cor": "#CC2040"
+      }
+    ]
+  },
+  "senador": {
+    "2014": [
+      {
+        "nome_completo": "LASIER COSTA MARTINS",
+        "nome_exibicao": "Lasier Martins",
+        "partido": "PDT",
+        "numero": 123,
+        "cor": "#7F5DAC"
+      },
+      {
+        "nome_completo": "OLÍVIO DE OLIVEIRA DUTRA",
+        "nome_exibicao": "Olívio Dutra",
+        "partido": "PT",
+        "numero": 131,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "PEDRO JORGE SIMON",
+        "nome_exibicao": "Pedro Simon",
+        "partido": "MDB",
+        "numero": 151,
+        "cor": "#5CE61F"
+      },
+      {
+        "nome_completo": "SIMONE REGINA DIEFENTHAELER LEITE",
+        "nome_exibicao": "Simone Leite",
+        "partido": "PP",
+        "numero": 111,
+        "cor": "#2FE6BF"
+      },
+      {
+        "nome_completo": "JULIO CEZAR LEIRIAS FLORES",
+        "nome_exibicao": "Julio Flores",
+        "partido": "PSTU",
+        "numero": 160,
+        "cor": "#FF4500"
+      },
+      {
+        "nome_completo": "CIRO CASTILHO MACHADO",
+        "nome_exibicao": "Ciro Machado",
+        "partido": "PMN",
+        "numero": 333,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "RUBENS GOLDENBERG",
+        "nome_exibicao": "Rubens Goldenberg",
+        "partido": "PRP",
+        "numero": 444,
+        "cor": "#CC2040"
+      }
+    ],
+    "2018": [
+      {
+        "nome_completo": "LUIS CARLOS HEINZE",
+        "nome_exibicao": "Luis Carlos Heinze",
+        "partido": "PP",
+        "numero": 111,
+        "cor": "#2FE6BF"
+      },
+      {
+        "nome_completo": "PAULO RENATO PAIM",
+        "nome_exibicao": "Paulo Paim",
+        "partido": "PT",
+        "numero": 131,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "LUIZ ROBERTO DE ALBUQUERQUE",
+        "nome_exibicao": "Beto Albuquerque",
+        "partido": "PSB",
+        "numero": 400,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "CARMEN ZOLEIKE FLORES INACIO",
+        "nome_exibicao": "Carmen Flores",
+        "partido": "PSL",
+        "numero": 170,
+        "cor": "#A39A10"
+      },
+      {
+        "nome_completo": "JOSÉ ALBERTO FOGAÇA DE MEDEIROS",
+        "nome_exibicao": "José Fogaça",
+        "partido": "MDB",
+        "numero": 151,
+        "cor": "#5CE61F"
+      },
+      {
+        "nome_completo": "DILCE ABGAIL RODRIGUES PEREIRA",
+        "nome_exibicao": "Abgail Pereira",
+        "partido": "PCdoB",
+        "numero": 651,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "SANDRA REGINA MARÇOLLA WEBER",
+        "nome_exibicao": "Sandra Weber",
+        "partido": "SD",
+        "numero": 777,
+        "cor": "#FF4500"
+      },
+      {
+        "nome_completo": "MARIO BERND NETO",
+        "nome_exibicao": "Mario Bernd",
+        "partido": "PPS",
+        "numero": 234,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "ANA CARLA VARELA DO NASCIMENTO",
+        "nome_exibicao": "Ana Varela",
+        "partido": "PODE",
+        "numero": 190,
+        "cor": "#FF4500"
+      },
+      {
+        "nome_completo": "ROMER DOS SANTOS GUEX",
+        "nome_exibicao": "Romer Guex",
+        "partido": "PSOL",
+        "numero": 500,
+        "cor": "#B83615"
+      },
+      {
+        "nome_completo": "MARLI SCHAULE",
+        "nome_exibicao": "Marli Schaule",
+        "partido": "PSTU",
+        "numero": 161,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "CLEBER BARCELOS SOARES",
+        "nome_exibicao": "Cleber Soares",
+        "partido": "PCB",
+        "numero": 212,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "LUIZ CARLOS MACHADO",
+        "nome_exibicao": "Machado",
+        "partido": "DC",
+        "numero": 273,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "JOÃO AUGUSTO DE MORAES GOMES",
+        "nome_exibicao": "João Augusto",
+        "partido": "PSTU",
+        "numero": 160,
+        "cor": "#006400"
+      },
+      {
+        "nome_completo": "LUIZ DELVAIR MARTINS BARROS",
+        "nome_exibicao": "Luiz Delvair",
+        "partido": "PCO",
+        "numero": 290,
+        "cor": "#006400"
+      }
+    ],
+    "2022": [
+      {
+        "nome_completo": "ANTONIO HAMILTON MARTINS MOURÃO",
+        "nome_exibicao": "Hamilton Mourão",
+        "partido": "REPUBLICANOS",
+        "numero": 100,
+        "cor": "#DCE60C"
+      },
+      {
+        "nome_completo": "OLÍVIO DE OLIVEIRA DUTRA",
+        "nome_exibicao": "Olívio Dutra",
+        "partido": "PT",
+        "numero": 131,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "ANA AMÉLIA DE LEMOS",
+        "nome_exibicao": "Ana Amélia Lemos",
+        "partido": "PSD",
+        "numero": 555,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "NÁDIA RODRIGUES SILVEIRA GERHARD",
+        "nome_exibicao": "Comandante Nádia",
+        "partido": "PP",
+        "numero": 111,
+        "cor": "#2FE6BF"
+      },
+      {
+        "nome_completo": "RONALDO TEIXEIRA DA SILVA",
+        "nome_exibicao": "Professor Naldo",
+        "partido": "AVANTE",
+        "numero": 700,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "SANDRA FIGUEIREDO",
+        "nome_exibicao": "Sanny Figueiredo",
+        "partido": "PSB",
+        "numero": 400,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "MARISTELA ZANOTTO",
+        "nome_exibicao": "Maristela Zanotto",
+        "partido": "PSC",
+        "numero": 200,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "FABIANA DA SILVA SANGUINÉ",
+        "nome_exibicao": "Fabiana Sanguiné",
+        "partido": "PSTU",
+        "numero": 160,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "PAULO ROBERTO DA ROSA",
+        "nome_exibicao": "Paulo Rosa",
+        "partido": "DC",
+        "numero": 270,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "FRANCISCO FRANKE SETTINERI",
+        "nome_exibicao": "Franke Settineri",
+        "partido": "PCO",
+        "numero": 290,
+        "cor": "#CC2040"
+      }
+    ]
+  },
+  "presidente": {
+    "2014": [
+      {
+        "nome_completo": "AÉCIO NEVES DA CUNHA",
+        "nome_exibicao": "Aécio Neves",
+        "partido": "PSDB",
+        "numero": 45,
+        "cor": "#2F60E6"
+      },
+      {
+        "nome_completo": "DILMA VANA ROUSSEFF",
+        "nome_exibicao": "Dilma Rousseff",
+        "partido": "PT",
+        "numero": 13,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "EDUARDO JORGE MARTINS ALVES SOBRINHO",
+        "nome_exibicao": "Eduardo Jorge",
+        "partido": "PV",
+        "numero": 43,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "EVERALDO DIAS PEREIRA",
+        "nome_exibicao": "Pastor Everaldo",
+        "partido": "PSC",
+        "numero": 20,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "JOSE MARIA EYMAEL",
+        "nome_exibicao": "Eymael",
+        "partido": "DC",
+        "numero": 27,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "JOSÉ LEVY FIDELIX DA CRUZ",
+        "nome_exibicao": "Levy Fidelix",
+        "partido": "PRTB",
+        "numero": 28,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "JOSÉ MARIA DE ALMEIDA",
+        "nome_exibicao": "José Maria",
+        "partido": "PSTU",
+        "numero": 16,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "LUCIANA KREBS GENRO",
+        "nome_exibicao": "Luciana Genro",
+        "partido": "PSOL",
+        "numero": 50,
+        "cor": "#B83615"
+      },
+      {
+        "nome_completo": "MARIA OSMARINA MARINA DA SILVA VAZ DE LIMA",
+        "nome_exibicao": "Marina Silva",
+        "partido": "PSB",
+        "numero": 40,
+        "cor": "#CC2040"
+      },
+      {
+        "nome_completo": "MAURO LUÍS IASI",
+        "nome_exibicao": "Mauro Iasi",
+        "partido": "PCB",
+        "numero": 21,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "RUI COSTA PIMENTA",
+        "nome_exibicao": "Rui Costa",
+        "partido": "PCO",
+        "numero": 29,
+        "cor": "#808080"
+      }
+    ],
+    "2018": [
+      {
+        "nome_completo": "ALVARO FERNANDES DIAS",
+        "nome_exibicao": "Alvaro Dias",
+        "partido": "PODE",
+        "numero": 20,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "BENEVENUTO DACIOLO FONSECA DOS SANTOS",
+        "nome_exibicao": "Cabo Daciolo",
+        "partido": "PATRI",
+        "numero": 25,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "CIRO FERREIRA GOMES",
+        "nome_exibicao": "Ciro Gomes",
+        "partido": "PDT",
+        "numero": 12,
+        "cor": "#7F5DAC"
+      },
+      {
+        "nome_completo": "FERNANDO HADDAD",
+        "nome_exibicao": "Fernando Haddad",
+        "partido": "PT",
+        "numero": 13,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "GERALDO JOSÉ RODRIGUES ALCKMIN FILHO",
+        "nome_exibicao": "Geraldo Alckmin",
+        "partido": "PSDB",
+        "numero": 45,
+        "cor": "#2F60E6"
+      },
+      {
+        "nome_completo": "GUILHERME CASTRO BOULOS",
+        "nome_exibicao": "Gulherme Boulos",
+        "partido": "PSOL",
+        "numero": 50,
+        "cor": "#B83615"
+      },
+      {
+        "nome_completo": "HENRIQUE DE CAMPOS MEIRELLES",
+        "nome_exibicao": "Henrique Meirelles",
+        "partido": "MDB",
+        "numero": 15,
+        "cor": "#5CE61F"
+      },
+      {
+        "nome_completo": "JAIR MESSIAS BOLSONARO",
+        "nome_exibicao": "Jair Bolsonaro",
+        "partido": "PSL",
+        "numero": 17,
+        "cor": "#A39A10"
+      },
+      {
+        "nome_completo": "JOSE MARIA EYMAEL",
+        "nome_exibicao": "Eymael",
+        "partido": "DC",
+        "numero": 27,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "JOÃO DIONISIO FILGUEIRA BARRETO AMOEDO",
+        "nome_exibicao": "Amoedo",
+        "partido": "NOVO",
+        "numero": 30,
+        "cor": "#BD6F00"
+      },
+      {
+        "nome_completo": "JOÃO VICENTE FONTELLA GOULART",
+        "nome_exibicao": "João Goulart Filho",
+        "partido": "PPL",
+        "numero": 54,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "MARIA OSMARINA MARINA DA SILVA VAZ DE LIMA",
+        "nome_exibicao": "Marina Silva",
+        "partido": "REDE",
+        "numero": 18,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "VERA LUCIA PEREIRA DA SILVA SALGADO",
+        "nome_exibicao": "Vera Lucia",
+        "partido": "PSTU",
+        "numero": 16,
+        "cor": "#808080"
+      }
+    ],
+    "2022": [
+      {
+        "nome_completo": "CIRO FERREIRA GOMES",
+        "nome_exibicao": "Ciro Gomes",
+        "partido": "PDT",
+        "numero": 12,
+        "cor": "#7F5DAC"
+      },
+      {
+        "nome_completo": "JAIR MESSIAS BOLSONARO",
+        "nome_exibicao": "Jair Bolsonaro",
+        "partido": "PL",
+        "numero": 22,
+        "cor": "#A39A10"
+      },
+      {
+        "nome_completo": "JOSE MARIA EYMAEL",
+        "nome_exibicao": "Eymael",
+        "partido": "DC",
+        "numero": 27,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "KELMON LUIS DA SILVA SOUZA",
+        "nome_exibicao": "Padre Kelmon",
+        "partido": "PTB",
+        "numero": 14,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "LEONARDO PÉRICLES VIEIRA ROQUE",
+        "nome_exibicao": "Leonardo Péricles",
+        "partido": "UP",
+        "numero": 80,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "LUIZ FELIPE CHAVES D AVILA",
+        "nome_exibicao": "Luiz Felipe D'Avila",
+        "partido": "NOVO",
+        "numero": 30,
+        "cor": "#BD6F00"
+      },
+      {
+        "nome_completo": "LUIZ INÁCIO LULA DA SILVA",
+        "nome_exibicao": "Lula",
+        "partido": "PT",
+        "numero": 13,
+        "cor": "#F00501"
+      },
+      {
+        "nome_completo": "SIMONE NASSAR TEBET",
+        "nome_exibicao": "Simone Tebet",
+        "partido": "MDB",
+        "numero": 15,
+        "cor": "#5CE61F"
+      },
+      {
+        "nome_completo": "SOFIA PADUA MANZANO",
+        "nome_exibicao": "Sofia Manzano",
+        "partido": "PCB",
+        "numero": 21,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "SORAYA VIEIRA THRONICKE",
+        "nome_exibicao": "Soraya Thronicke",
+        "partido": "UNIÃO",
+        "numero": 44,
+        "cor": "#808080"
+      },
+      {
+        "nome_completo": "VERA LUCIA PEREIRA DA SILVA SALGADO",
+        "nome_exibicao": "Vera Lucia",
+        "partido": "PSTU",
+        "numero": 16,
+        "cor": "#808080"
+      }
+    ]
+  }
+}
