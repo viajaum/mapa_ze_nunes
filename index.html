@@ -164,7 +164,7 @@
             gap: 20px;
         }
 
-        /* Coluna esquerda - ALINHADA NA PARTE INFERIOR */
+        /* Coluna esquerda */
         .coluna-esquerda {
             flex: 2.2;
             min-width: 0;
@@ -506,6 +506,73 @@
             font-size: 0.8em;
             font-weight: 600;
         }
+
+        /* Botões de teste */
+        .botoes-teste {
+            display: flex;
+            gap: 5px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.4);
+            pointer-events: auto;
+        }
+
+        .btn-teste {
+            flex: 1;
+            background: var(--vermelho-principal);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-teste:hover {
+            background: #a52a2a;
+            transform: translateY(-2px);
+        }
+
+        .btn-teste.secondary {
+            background: var(--dourado-principal);
+        }
+
+        .btn-teste.secondary:hover {
+            background: #e6b422;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            top: 110px;
+            right: 100px;
+            z-index: 40;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(5px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(224,224,224,0.5);
+            color: var(--texto-principal);
+        }
+
+        .status-ok { color: green; font-weight: bold; }
+        .status-warning { color: orange; font-weight: bold; }
+        .status-error { color: red; font-weight: bold; }
+
+        /* Mensagens de ajuda */
+        .mensagem-ajuda {
+            padding: 10px;
+            text-align: center;
+            color: var(--texto-secundario);
+            font-style: italic;
+            background: rgba(255,255,255,0.5);
+            border-radius: 5px;
+        }
         
         @media (max-width: 1200px) {
             .container { 
@@ -531,6 +598,11 @@
         <div class="controles-zoom" id="zoomInfo">
             <span id="nivelZoom">7</span> | <span id="camadaAtiva">Municípios</span>
         </div>
+    </div>
+
+    <!-- Status indicator -->
+    <div class="status-indicator" id="statusIndicator">
+        <span>Locais: </span><span id="statusLocais" class="status-warning">⏳ Carregando...</span>
     </div>
     
     <!-- Header -->
@@ -628,6 +700,19 @@
         
         <!-- Coluna Direita -->
         <div class="coluna-direita">
+            <!-- Botões de teste -->
+            <div class="botoes-teste">
+                <button class="btn-teste" onclick="selecionarPrimeiroMunicipio()">
+                    🏛️ 1º Município
+                </button>
+                <button class="btn-teste secondary" onclick="debugLocais()">
+                    🔍 Debug Locais
+                </button>
+                <button class="btn-teste" onclick="forcarZoomLocais()">
+                    🔎 Ver Locais
+                </button>
+            </div>
+
             <!-- Slider -->
             <div class="slider-container">
                 <div class="slider-label">
@@ -649,19 +734,23 @@
                         <span>Municípios</span>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="buscaMunicipios" placeholder="Buscar...">
+                        <input type="text" id="buscaMunicipios" placeholder="Buscar município...">
                     </div>
-                    <div class="lista" id="listaMunicipios"></div>
+                    <div class="lista" id="listaMunicipios">
+                        <div class="mensagem-ajuda">Carregando municípios...</div>
+                    </div>
                 </div>
                 
                 <div class="component lista-component">
                     <div class="component-header">
-                        <span>Locais</span>
+                        <span>Locais de Votação</span>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="buscaLocais" placeholder="Buscar..." disabled>
+                        <input type="text" id="buscaLocais" placeholder="Buscar local..." disabled>
                     </div>
-                    <div class="lista" id="listaLocais"></div>
+                    <div class="lista" id="listaLocais">
+                        <div class="mensagem-ajuda">Selecione um município</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -701,57 +790,68 @@
         // Função de debug aprimorada
         function debugLog(context, data) {
             console.log(`[DEBUG] ${context}:`, data);
+        }
+
+        // Função para atualizar status dos locais
+        function atualizarStatusLocais() {
+            const statusEl = document.getElementById('statusLocais');
+            if (!statusEl) return;
             
-            // Criar ou atualizar painel de debug
-            let debugPanel = document.getElementById('debugPanel');
-            if (!debugPanel) {
-                debugPanel = document.createElement('div');
-                debugPanel.id = 'debugPanel';
-                debugPanel.style.cssText = `
-                    position: fixed;
-                    bottom: 10px;
-                    right: 10px;
-                    background: rgba(0,0,0,0.8);
-                    color: #0f0;
-                    padding: 10px;
-                    border-radius: 5px;
-                    font-family: monospace;
-                    font-size: 12px;
-                    max-width: 400px;
-                    max-height: 300px;
-                    overflow: auto;
-                    z-index: 1000;
-                    border: 1px solid #0f0;
-                    display: none;
-                `;
-                document.body.appendChild(debugPanel);
-                
-                // Botão para mostrar/esconder debug
-                const debugBtn = document.createElement('button');
-                debugBtn.textContent = '🐞 Debug';
-                debugBtn.style.cssText = `
-                    position: fixed;
-                    bottom: 10px;
-                    right: 10px;
-                    z-index: 1001;
-                    background: #333;
-                    color: white;
-                    border: none;
-                    padding: 5px 10px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                `;
-                debugBtn.onclick = () => {
-                    debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-                };
-                document.body.appendChild(debugBtn);
+            if (!state.locaisCarregados) {
+                statusEl.className = 'status-warning';
+                statusEl.textContent = '⏳ Carregando...';
+            } else {
+                const totalLocais = state.locaisGeo.length;
+                const municipiosComLocais = state.locais.size;
+                statusEl.className = 'status-ok';
+                statusEl.textContent = `✅ ${totalLocais} locais em ${municipiosComLocais} municípios`;
+            }
+        }
+
+        // Função de debug para locais
+        function debugLocais() {
+            console.log('=== 🔍 DEBUG LOCAIS ===');
+            console.log('state.locaisCarregados:', state.locaisCarregados);
+            console.log('state.locaisGeo length:', state.locaisGeo?.length || 0);
+            console.log('state.locais Map size:', state.locais?.size || 0);
+            
+            // Mostrar primeiros 5 municípios com locais
+            console.log('Primeiros municípios com locais:');
+            let count = 0;
+            for (let [cod, locais] of state.locais) {
+                if (count++ < 5) {
+                    console.log(`  ${cod}: ${locais.length} locais`);
+                }
             }
             
-            // Adicionar ao painel
-            const entry = document.createElement('div');
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${context}: ${JSON.stringify(data).substring(0, 100)}`;
-            debugPanel.appendChild(entry);
-            debugPanel.scrollTop = debugPanel.scrollHeight;
+            // Verificar locais com votos no ano atual
+            if (state.candidato && state.ano) {
+                let totalLocaisComVotos = 0;
+                let totalVotos = 0;
+                state.locaisGeo.forEach(l => {
+                    const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                    if (votos > 0) {
+                        totalLocaisComVotos++;
+                        totalVotos += votos;
+                    }
+                });
+                console.log('Locais com votos em', state.ano, ':', totalLocaisComVotos);
+                console.log('Total de votos em locais:', totalVotos);
+            }
+            
+            // Verificar elemento da lista
+            const listaLocaisEl = document.getElementById('listaLocais');
+            console.log('Elemento listaLocais:', listaLocaisEl);
+            console.log('HTML atual da lista:', listaLocaisEl?.innerHTML);
+            
+            // Verificar município selecionado
+            console.log('Município selecionado:', state.municipioSelecionado);
+            if (state.municipioSelecionado) {
+                const locaisDoMun = state.locais.get(state.municipioSelecionado);
+                console.log('Locais cadastrados neste município:', locaisDoMun?.length || 0);
+            }
+            
+            atualizarStatusLocais();
         }
 
         function getAnoAnterior(ano) {
@@ -794,53 +894,24 @@
 
         // Função getCandidatoInfo para outros cargos
         function getCandidatoInfo(nomeCompleto, cargo, ano) {
-            debugLog('getCandidatoInfo - Buscando', {
-                nome: nomeCompleto,
-                cargo: cargo,
-                ano: ano
-            });
+            if (!state.configCandidatos) return null;
             
-            if (!state.configCandidatos) {
-                debugLog('getCandidatoInfo - ERRO', 'state.configCandidatos é null');
-                return null;
-            }
-            
-            // Verifica se existe configuração para o cargo e ano
             if (state.configCandidatos[cargo] && state.configCandidatos[cargo][ano]) {
                 const candidatosConfig = state.configCandidatos[cargo][ano];
                 
-                debugLog('getCandidatoInfo - Configurações disponíveis', {
-                    cargo: cargo,
-                    ano: ano,
-                    quantidade: candidatosConfig.length
-                });
-                
-                // Itera sobre as configurações
                 for (const config of candidatosConfig) {
-                    // Verifica se config existe e tem as propriedades necessárias
                     if (!config) continue;
                     
                     const nomeConfig = config.nome_completo || '';
                     const nomeUrna = config.nome_urna || '';
                     
-                    // Comparação mais segura
                     if (nomeCompleto.includes(nomeConfig) || 
                         nomeConfig.includes(nomeCompleto) ||
                         (nomeUrna && (nomeCompleto.includes(nomeUrna) || nomeUrna.includes(nomeCompleto)))) {
-                        
-                        debugLog('getCandidatoInfo - ENCONTRADO', {
-                            nomeOriginal: nomeCompleto,
-                            nomeConfig: nomeConfig,
-                            nomeUrna: nomeUrna,
-                            config: config
-                        });
-                        
                         return config;
                     }
                 }
             }
-            
-            debugLog('getCandidatoInfo - NÃO ENCONTRADO', nomeCompleto);
             return null;
         }
 
@@ -848,21 +919,13 @@
         function extrairVotosOutrosCargos(dados, cargo) {
             const votos = [];
             
-            if (!dados) {
-                console.log(`Dados não carregados para ${cargo}`);
-                return votos;
-            }
+            if (!dados) return votos;
             
-            console.log(`Extraindo votos para ${cargo} no ano ${state.ano}`);
-            
-            // Itera sobre os candidatos
             for (const [nomeCandidato, infoCandidato] of Object.entries(dados)) {
-                // Verifica se existe dados para o ano selecionado
                 if (infoCandidato.anos && infoCandidato.anos[state.ano]) {
                     const dadosAno = infoCandidato.anos[state.ano];
                     let totalVotos = 0;
                     
-                    // PRIORIDADE 1: Local específico
                     if (state.localSelecionado && state.municipioSelecionado) {
                         if (dadosAno.municipios && 
                             dadosAno.municipios[state.municipioSelecionado] && 
@@ -872,22 +935,17 @@
                         }
                     }
                     
-                    // PRIORIDADE 2: Município selecionado
                     if (totalVotos === 0 && state.municipioSelecionado) {
                         if (dadosAno.municipios && dadosAno.municipios[state.municipioSelecionado]) {
                             totalVotos = dadosAno.municipios[state.municipioSelecionado].votos || 0;
                         }
                     }
                     
-                    // PRIORIDADE 3: Estado
                     if (totalVotos === 0) {
                         totalVotos = dadosAno.estado || 0;
                     }
                     
                     if (totalVotos > 0) {
-                        console.log(`Candidato ${nomeCandidato} tem ${totalVotos} votos em ${state.ano}`);
-                        
-                        // Busca configuração do candidato
                         const config = getCandidatoInfo(nomeCandidato, cargo, state.ano);
                         
                         let nomeExibicao = nomeCandidato;
@@ -910,164 +968,67 @@
                 }
             }
             
-            console.log(`Total de candidatos com votos para ${cargo} em ${state.ano}:`, votos.length);
             return votos.sort((a, b) => b.votos - a.votos);
         }
 
-        // Função para extrair votos do Top 10 Deputados com debug
+        // Função para extrair votos do Top 10 Deputados
         function extrairVotosTop10() {
-            debugLog('extrairVotosTop10 - Iniciando', {
-                temTop10: !!state.top10Deputados,
-                ano: state.ano,
-                municipioSelecionado: state.municipioSelecionado,
-                localSelecionado: state.localSelecionado
-            });
-            
-            if (!state.top10Deputados) {
-                debugLog('extrairVotosTop10 - ERRO', 'state.top10Deputados é null');
-                return [];
-            }
-            
-            // Debug: mostrar estrutura do top10
-            debugLog('extrairVotosTop10 - Estrutura top10', {
-                keys: Object.keys(state.top10Deputados),
-                temAno: state.top10Deputados[state.ano] ? 'sim' : 'não'
-            });
+            if (!state.top10Deputados) return [];
             
             const ano = state.ano;
             const dadosAno = state.top10Deputados[ano];
-            if (!dadosAno) {
-                debugLog('extrairVotosTop10 - ERRO', `Sem dados para o ano ${ano}`);
-                return [];
-            }
-            
-            // Debug: mostrar estrutura do ano
-            debugLog('extrairVotosTop10 - Estrutura do ano', {
-                temEstado: !!dadosAno.estado,
-                temMunicipios: !!dadosAno.municipios,
-                municipiosKeys: dadosAno.municipios ? Object.keys(dadosAno.municipios).slice(0, 3) : []
-            });
+            if (!dadosAno) return [];
             
             let dadosArray = [];
-            let fonte = '';
             
             // PRIORIDADE 1: Local específico
             if (state.localSelecionado && state.municipioSelecionado) {
-                debugLog('extrairVotosTop10 - Buscando local', {
-                    municipio: state.municipioSelecionado,
-                    local: state.localSelecionado
-                });
-                
                 const municipioData = dadosAno.municipios?.[state.municipioSelecionado];
-                if (municipioData) {
-                    debugLog('extrairVotosTop10 - Dados do município', {
-                        temLocais: !!municipioData.locais,
-                        locaisKeys: municipioData.locais ? Object.keys(municipioData.locais) : []
-                    });
-                    
-                    if (municipioData.locais && municipioData.locais[state.localSelecionado]) {
-                        dadosArray = municipioData.locais[state.localSelecionado];
-                        fonte = 'local';
-                        debugLog('extrairVotosTop10 - Encontrou dados do local', {
-                            tamanho: dadosArray.length,
-                            primeiro: dadosArray[0]
-                        });
-                    }
+                if (municipioData && municipioData.locais && municipioData.locais[state.localSelecionado]) {
+                    dadosArray = municipioData.locais[state.localSelecionado];
                 }
             }
             
             // PRIORIDADE 2: Município selecionado
             if (dadosArray.length === 0 && state.municipioSelecionado) {
-                debugLog('extrairVotosTop10 - Buscando município', {
-                    municipio: state.municipioSelecionado
-                });
-                
                 const municipioData = dadosAno.municipios?.[state.municipioSelecionado];
                 if (municipioData && municipioData.top10) {
                     dadosArray = municipioData.top10;
-                    fonte = 'municipio';
-                    debugLog('extrairVotosTop10 - Encontrou dados do município', {
-                        tamanho: dadosArray.length,
-                        primeiro: dadosArray[0]
-                    });
                 }
             }
             
             // PRIORIDADE 3: Estado
             if (dadosArray.length === 0 && dadosAno.estado) {
                 dadosArray = dadosAno.estado;
-                fonte = 'estado';
-                debugLog('extrairVotosTop10 - Usando dados do estado', {
-                    tamanho: dadosArray.length,
-                    primeiro: dadosArray[0]
-                });
             }
-            
-            debugLog('extrairVotosTop10 - Resultado final', {
-                fonte: fonte,
-                tamanho: dadosArray.length,
-                temDados: dadosArray.length > 0
-            });
             
             return dadosArray;
         }
 
-        // Função para obter informações do deputado com matching melhorado
+        // Função para obter informações do deputado
         function getDeputadoInfo(nomeCandidato, ano) {
-            debugLog('getDeputadoInfo - Buscando', {
-                candidato: nomeCandidato,
-                ano: ano
-            });
+            if (!state.candidatosDeputados) return null;
             
-            if (!state.candidatosDeputados) {
-                debugLog('getDeputadoInfo - ERRO', 'state.candidatosDeputados é null');
-                return null;
-            }
-            
-            debugLog('getDeputadoInfo - Estrutura candidatosDeputados', {
-                temDeputadoEstadual: !!state.candidatosDeputados.deputado_estadual,
-                anosDisponiveis: state.candidatosDeputados.deputado_estadual ? 
-                    Object.keys(state.candidatosDeputados.deputado_estadual) : []
-            });
-            
-            if (!state.candidatosDeputados.deputado_estadual) {
-                return null;
-            }
+            if (!state.candidatosDeputados.deputado_estadual) return null;
             
             const dadosAno = state.candidatosDeputados.deputado_estadual[ano];
-            if (!dadosAno) {
-                debugLog('getDeputadoInfo - ERRO', `Sem dados para o ano ${ano}`);
-                return null;
-            }
+            if (!dadosAno) return null;
             
-            debugLog('getDeputadoInfo - Candidatos disponíveis', {
-                quantidade: Object.keys(dadosAno).length,
-                primeiros: Object.keys(dadosAno).slice(0, 5)
-            });
+            // 1. Correspondência exata
+            if (dadosAno[nomeCandidato]) return dadosAno[nomeCandidato];
             
-            // 1. Primeiro tenta correspondência exata
-            if (dadosAno[nomeCandidato]) {
-                debugLog('getDeputadoInfo - ENCONTRADO (exato)', {
-                    nomeOriginal: nomeCandidato,
-                    info: dadosAno[nomeCandidato]
-                });
-                return dadosAno[nomeCandidato];
-            }
-            
-            // 2. Remove acentos e converte para maiúsculas para comparação
+            // 2. Remove acentos e converte para maiúsculas
             const nomeNormalizado = nomeCandidato
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
                 .toUpperCase()
                 .trim();
             
-            debugLog('getDeputadoInfo - Nome normalizado', nomeNormalizado);
-            
-            // 3. Primeiro procura por correspondência que inclua nome e sobrenome (mais precisa)
             const palavrasCandidato = nomeNormalizado.split(' ').filter(p => p.length > 2);
             
-            // Lista para armazenar possíveis matches com pontuação
-            const matches = [];
+            // Busca por melhor match
+            let melhorMatch = null;
+            let maiorPontuacao = 0;
             
             for (const [nome, info] of Object.entries(dadosAno)) {
                 const nomeConfigNormalizado = nome
@@ -1078,80 +1039,39 @@
                 
                 const palavrasConfig = nomeConfigNormalizado.split(' ').filter(p => p.length > 2);
                 
-                // Calcula pontuação de matching
+                // Calcula pontuação
                 let pontuacao = 0;
                 
-                // Verifica se um contém o outro (matching forte)
-                if (nomeNormalizado.includes(nomeConfigNormalizado) || 
-                    nomeConfigNormalizado.includes(nomeNormalizado)) {
+                if (nomeNormalizado.includes(nomeConfigNormalizado) || nomeConfigNormalizado.includes(nomeNormalizado)) {
                     pontuacao += 10;
                 }
                 
-                // Conta palavras em comum (matching médio)
                 for (const palavra of palavrasCandidato) {
-                    if (palavrasConfig.includes(palavra)) {
-                        pontuacao += 1;
-                    }
+                    if (palavrasConfig.includes(palavra)) pontuacao += 1;
                 }
                 
-                // Verifica sobrenomes (última palavra) - matching muito forte
                 const sobrenomeCandidato = palavrasCandidato[palavrasCandidato.length - 1];
                 const sobrenomeConfig = palavrasConfig[palavrasConfig.length - 1];
                 
-                if (sobrenomeCandidato === sobrenomeConfig && sobrenomeCandidato.length > 2) {
-                    pontuacao += 5;
-                }
+                if (sobrenomeCandidato === sobrenomeConfig && sobrenomeCandidato.length > 2) pontuacao += 5;
                 
-                // Verifica primeiro nome (primeira palavra) - matching forte
                 const primeiroNomeCandidato = palavrasCandidato[0];
                 const primeiroNomeConfig = palavrasConfig[0];
                 
-                if (primeiroNomeCandidato === primeiroNomeConfig && primeiroNomeCandidato.length > 2) {
-                    pontuacao += 3;
-                }
+                if (primeiroNomeCandidato === primeiroNomeConfig && primeiroNomeCandidato.length > 2) pontuacao += 3;
                 
-                if (pontuacao > 0) {
-                    matches.push({
-                        nome: nome,
-                        info: info,
-                        pontuacao: pontuacao,
-                        nomeConfigNormalizado: nomeConfigNormalizado
-                    });
+                if (pontuacao > maiorPontuacao) {
+                    maiorPontuacao = pontuacao;
+                    melhorMatch = { nome, info };
                 }
             }
             
-            // Ordena por pontuação (maior primeiro)
-            matches.sort((a, b) => b.pontuacao - a.pontuacao);
-            
-            if (matches.length > 0) {
-                // Verifica se o melhor match tem pontuação significativa
-                if (matches[0].pontuacao >= 5) {
-                    debugLog('getDeputadoInfo - ENCONTRADO (melhor match)', {
-                        nomeOriginal: nomeCandidato,
-                        nomeConfig: matches[0].nome,
-                        pontuacao: matches[0].pontuacao,
-                        info: matches[0].info
-                    });
-                    return matches[0].info;
-                } else {
-                    debugLog('getDeputadoInfo - Matches com pontuação baixa ignorados', {
-                        nomeOriginal: nomeCandidato,
-                        matches: matches.map(m => ({ nome: m.nome, pontuacao: m.pontuacao }))
-                    });
-                }
-            }
-            
-            // 4. Log detalhado para debugging
-            debugLog('getDeputadoInfo - NÃO ENCONTRADO', {
-                nomeBuscado: nomeCandidato,
-                nomeNormalizado: nomeNormalizado,
-                candidatosDisponiveis: Object.keys(dadosAno).slice(0, 10)
-            });
+            if (melhorMatch && maiorPontuacao >= 5) return melhorMatch.info;
             
             return null;
         }
 
-        // Função para gerar cor gradiente baseada na posição
+        // Função para gerar cor gradiente
         function getCorGradiente(index, total) {
             const r = 139 - (index * 8);
             const g = 30 + (index * 12);
@@ -1159,34 +1079,22 @@
             return `rgb(${Math.max(100, r)}, ${Math.min(180, g)}, ${b})`;
         }
 
-        // Função para atualizar gráfico de barras com debug
+        // Função para gerar cor aleatória
+        function getRandomColor() {
+            const colors = ['#8B1E1E', '#D4A017', '#1E5F8B', '#2E8B57', '#8B4513', '#4B0082', '#FF1493', '#20B2AA', '#C71585', '#4682B4'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Função para atualizar gráfico de barras
         function atualizarGraficoBarras() {
-            debugLog('atualizarGraficoBarras - INICIANDO', {
-                ano: state.ano,
-                temTop10: !!state.top10Deputados,
-                temConfigDeputados: !!state.candidatosDeputados
-            });
-            
             const canvas = document.getElementById('graficoBarrasDeputados');
-            if (!canvas) {
-                debugLog('atualizarGraficoBarras - ERRO', 'Canvas não encontrado');
-                return;
-            }
+            if (!canvas) return;
             
-            if (!state.top10Deputados) {
-                debugLog('atualizarGraficoBarras - ERRO', 'state.top10Deputados não carregado');
-                return;
-            }
+            if (!state.top10Deputados) return;
             
             const dadosArray = extrairVotosTop10();
-            debugLog('atualizarGraficoBarras - dadosArray recebido', {
-                length: dadosArray.length,
-                isEmpty: dadosArray.length === 0,
-                primeiro: dadosArray[0]
-            });
             
             if (!dadosArray || dadosArray.length === 0) {
-                debugLog('atualizarGraficoBarras - Sem dados', 'Mostrando mensagem de erro');
                 if (graficoBarrasDeputados) graficoBarrasDeputados.destroy();
                 const ctx = canvas.getContext('2d');
                 graficoBarrasDeputados = new Chart(ctx, {
@@ -1208,44 +1116,16 @@
             }
             
             const top10 = dadosArray.slice(0, 10);
-            debugLog('atualizarGraficoBarras - Top 10', top10);
             
-            // Criar array com informações completas para cada candidato
-            const candidatosInfo = top10.map((d, index) => {
-                debugLog(`Processando candidato ${index}`, {
-                    nome: d.candidato,
-                    votos: d.votos
-                });
-                
+            const candidatosInfo = top10.map(d => {
                 if (d.candidato === "VOTO BRANCO") {
-                    return {
-                        nomeExibicao: "Brancos",
-                        partido: "",
-                        votos: d.votos
-                    };
+                    return { nomeExibicao: "Brancos", partido: "", votos: d.votos };
                 }
                 if (d.candidato === "VOTO NULO") {
-                    return {
-                        nomeExibicao: "Nulos",
-                        partido: "",
-                        votos: d.votos
-                    };
+                    return { nomeExibicao: "Nulos", partido: "", votos: d.votos };
                 }
                 
                 const info = getDeputadoInfo(d.candidato, state.ano);
-                
-                if (info) {
-                    debugLog(`Candidato ${index} ENCONTRADO na config`, {
-                        nomeOriginal: d.candidato,
-                        nomeExibicao: info.nome_exibicao,
-                        partido: info.partido,
-                        cor: info.cor
-                    });
-                } else {
-                    debugLog(`Candidato ${index} NÃO ENCONTRADO na config, usando fallback`, {
-                        nomeOriginal: d.candidato
-                    });
-                }
                 
                 return {
                     nomeExibicao: info?.nome_exibicao || d.candidato.split(' ').slice(0, 2).join(' '),
@@ -1254,41 +1134,20 @@
                 };
             });
             
-            debugLog('atualizarGraficoBarras - candidatosInfo', candidatosInfo);
-            
             const labels = candidatosInfo.map(info => info.nomeExibicao);
             const valores = candidatosInfo.map(info => info.votos);
             
-            // Define as cores baseado nas configurações ou gradiente
             const cores = top10.map((d, i) => {
                 if (d.candidato === "VOTO BRANCO") return "#999999";
                 if (d.candidato === "VOTO NULO") return "#666666";
                 
-                // Tenta buscar a cor da configuração
                 const info = getDeputadoInfo(d.candidato, state.ano);
-                if (info && info.cor && info.cor !== "#888888") {
-                    debugLog('atualizarGraficoBarras - Usando cor configurada', {
-                        candidato: d.candidato,
-                        cor: info.cor
-                    });
-                    return info.cor;
-                }
+                if (info && info.cor && info.cor !== "#888888") return info.cor;
                 
-                // Fallback: usa gradiente baseado na posição
-                const corGradiente = getCorGradiente(i, top10.length);
-                debugLog('atualizarGraficoBarras - Usando gradiente', {
-                    candidato: d.candidato,
-                    indice: i,
-                    cor: corGradiente
-                });
-                return corGradiente;
+                return getCorGradiente(i, top10.length);
             });
             
-            debugLog('atualizarGraficoBarras - cores', cores);
-            
-            if (graficoBarrasDeputados) {
-                graficoBarrasDeputados.destroy();
-            }
+            if (graficoBarrasDeputados) graficoBarrasDeputados.destroy();
             
             const ctx = canvas.getContext('2d');
             graficoBarrasDeputados = new Chart(ctx, {
@@ -1310,19 +1169,11 @@
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                // Título do tooltip: mostra o nome de exibição
-                                title: (context) => {
-                                    const index = context[0].dataIndex;
-                                    return candidatosInfo[index].nomeExibicao;
-                                },
-                                // Label do tooltip: mostra votos e partido
+                                title: (context) => candidatosInfo[context[0].dataIndex].nomeExibicao,
                                 label: (context) => {
-                                    const index = context.dataIndex;
-                                    const info = candidatosInfo[index];
+                                    const info = candidatosInfo[context.dataIndex];
                                     let label = `${info.votos.toLocaleString('pt-BR')} votos`;
-                                    if (info.partido) {
-                                        label += ` (${info.partido})`;
-                                    }
+                                    if (info.partido) label += ` (${info.partido})`;
                                     return label;
                                 }
                             }
@@ -1348,54 +1199,30 @@
                     }
                 }
             });
-            
-            debugLog('atualizarGraficoBarras - FINALIZADO', 'Gráfico criado com sucesso');
-        }
-
-        // Função auxiliar para gerar cor aleatória
-        function getRandomColor() {
-            const colors = ['#8B1E1E', '#D4A017', '#1E5F8B', '#2E8B57', '#8B4513', '#4B0082', '#FF1493', '#20B2AA', '#C71585', '#4682B4'];
-            return colors[Math.floor(Math.random() * colors.length)];
         }
 
         // Função para atualizar tudo quando o ano mudar
         function atualizarTudo() {
             console.log('Executando atualizarTudo para o ano:', state.ano);
             
-            // Atualiza o mapa (com tratamento de erro)
-            try {
-                atualizarMapa();
-            } catch (e) {
-                console.error('Erro ao atualizar mapa:', e);
-            }
+            try { atualizarMapa(); } catch (e) { console.error('Erro ao atualizar mapa:', e); }
             
-            // Atualiza o gráfico de evolução
             try {
                 if (state.municipioSelecionado && state.localSelecionado) {
                     atualizarEvolucaoLocal(state.municipioSelecionado, state.localSelecionado);
                 } else {
                     atualizarEvolucao();
                 }
-            } catch (e) {
-                console.error('Erro ao atualizar evolução:', e);
-            }
+            } catch (e) { console.error('Erro ao atualizar evolução:', e); }
             
-            // Atualiza os gráficos de pizza
-            try {
-                atualizarGraficos();
-            } catch (e) {
-                console.error('Erro ao atualizar gráficos:', e);
-            }
+            try { atualizarGraficos(); } catch (e) { console.error('Erro ao atualizar gráficos:', e); }
             
-            // Atualiza as listas
             try {
                 atualizarListaMunicipios();
                 if (state.municipioSelecionado) {
                     atualizarListaLocais(state.municipioSelecionado);
                 }
-            } catch (e) {
-                console.error('Erro ao atualizar listas:', e);
-            }
+            } catch (e) { console.error('Erro ao atualizar listas:', e); }
         }
 
         async function carregarDados() {
@@ -1412,17 +1239,7 @@
                     fetch('candidatos_deputado_estadual_RS.json').then(r => r.json())
                 ]);
 
-                console.log('Dados carregados com sucesso');
-                
-                // Log detalhado dos dados carregados
-                debugLog('Dados carregados - Top10 Deputados', {
-                    keys: Object.keys(top10),
-                    estrutura: top10
-                });
-                
-                debugLog('Dados carregados - Config Deputados', {
-                    estrutura: deputadosConfig
-                });
+                console.log('✅ Dados carregados com sucesso');
                 
                 Object.assign(state, { 
                     governador: gov, 
@@ -1440,7 +1257,6 @@
                     complete: (results) => {
                         results.data.forEach(m => {
                             if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
-                                // Verifica se as coordenadas são válidas
                                 const lat = parseFloat(m.LATITUDE);
                                 const lon = parseFloat(m.LONGITUDE);
                                 
@@ -1454,10 +1270,10 @@
                                 }
                             }
                         });
+                        console.log('✅ Municípios carregados:', state.municipios.size);
                         processarLocais();
                         initMapa();
                         
-                        // Pequeno atraso para garantir que tudo está carregado
                         setTimeout(() => {
                             atualizarListaMunicipios();
                             selecionarEstadoInicial();
@@ -1465,22 +1281,27 @@
                     }
                 });
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                debugLog('ERRO ao carregar dados', error.message);
+                console.error('❌ Erro ao carregar dados:', error);
             }
         }
         
         async function processarLocais() {
             try {
+                console.log('🟢 Carregando locais de votação...');
                 const locaisText = await fetch('locais_votacao_RS_geocodificado.csv').then(r => r.text());
+                
                 Papa.parse(locaisText, {
                     header: true,
                     complete: (results) => {
+                        console.log('CSV de locais parseado, linhas:', results.data.length);
+                        
                         state.locaisGeo = results.data.filter(l => {
                             const lat = parseFloat(l.LATITUDE);
                             const lon = parseFloat(l.LONGITUDE);
-                            return !isNaN(lat) && !isNaN(lon);
+                            return !isNaN(lat) && !isNaN(lon) && l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO;
                         });
+                        
+                        console.log('Locais com coordenadas válidas:', state.locaisGeo.length);
                         
                         results.data.forEach(l => {
                             if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
@@ -1493,12 +1314,30 @@
                                 });
                             }
                         });
+                        
                         state.locaisCarregados = true;
+                        
+                        // Estatísticas
+                        let totalLocais = 0;
+                        state.locais.forEach((locais, mun) => {
+                            totalLocais += locais.length;
+                        });
+                        console.log('✅ Locais processados:', {
+                            municipiosComLocais: state.locais.size,
+                            totalLocaisCadastrados: totalLocais,
+                            locaisGeorreferenciados: state.locaisGeo.length
+                        });
+                        
+                        atualizarStatusLocais();
+                        
                         if (map) atualizarMapa();
+                        if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
                     }
                 });
             } catch (error) {
-                console.warn('Erro ao carregar locais');
+                console.error('❌ Erro ao carregar locais:', error);
+                document.getElementById('statusLocais').className = 'status-error';
+                document.getElementById('statusLocais').textContent = '❌ Erro ao carregar';
             }
         }
         
@@ -1547,11 +1386,7 @@
             // MUNICÍPIOS
             state.municipiosGeo.forEach((geo, cod) => {
                 try {
-                    // Verifica se as coordenadas são válidas
-                    if (isNaN(geo.lat) || isNaN(geo.lon)) {
-                        console.warn(`Coordenadas inválidas para município ${geo.nome}:`, geo);
-                        return;
-                    }
+                    if (isNaN(geo.lat) || isNaN(geo.lon)) return;
                     
                     const votos = state.candidato.anos[state.ano]?.municipios[cod]?.votos || 0;
                     if (votos > 0) {
@@ -1573,6 +1408,7 @@
             
             // LOCAIS
             if (state.locaisCarregados) {
+                let locaisAdicionados = 0;
                 state.locaisGeo.forEach(l => {
                     try {
                         const lat = parseFloat(l.LATITUDE);
@@ -1582,6 +1418,7 @@
                         
                         const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
                         if (votos > 0) {
+                            locaisAdicionados++;
                             const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0) : 0;
                             
                             L.circleMarker([lat, lon], {
@@ -1597,6 +1434,7 @@
                         console.error('Erro ao adicionar local:', e);
                     }
                 });
+                console.log(`🗺️ ${locaisAdicionados} locais adicionados ao mapa`);
             }
             
             map.fire('zoomend');
@@ -1638,7 +1476,6 @@
             if (municipioEl) municipioEl.textContent = 'Rio Grande do Sul';
             if (localEl) localEl.style.display = 'none';
             
-            // Pequeno atraso para garantir que os dados estão prontos
             setTimeout(() => {
                 atualizarEvolucao();
                 atualizarGraficos();
@@ -1647,6 +1484,7 @@
         }
         
         function selecionarMunicipio(cod, nome) {
+            console.log('Selecionando município:', cod, nome);
             state.municipioSelecionado = cod;
             state.localSelecionado = null;
             document.getElementById('buscaLocais').disabled = false;
@@ -1660,6 +1498,7 @@
         }
         
         function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
+            console.log('Selecionando local:', codMun, codLocal, nomeLocal);
             state.municipioSelecionado = codMun;
             state.localSelecionado = codLocal;
             
@@ -1683,6 +1522,7 @@
         }
         
         function limparSelecao() {
+            console.log('Limpando seleção');
             state.municipioSelecionado = null;
             state.localSelecionado = null;
             document.getElementById('buscaLocais').disabled = true;
@@ -1748,7 +1588,7 @@
             if (!lista) return;
             
             if (!state.candidato) {
-                lista.innerHTML = '<div class="item-lista">Carregando...</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Carregando...</div>';
                 return;
             }
             
@@ -1774,13 +1614,13 @@
             filtrados.sort((a, b) => b.votos - a.votos);
             
             if (filtrados.length === 0) {
-                lista.innerHTML = '<div class="item-lista">Nenhum município encontrado</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum município encontrado</div>';
                 return;
             }
             
-            lista.innerHTML = filtrados.slice(0, 12).map(m => `
+            lista.innerHTML = filtrados.slice(0, 15).map(m => `
                 <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
-                    onclick="map.setView([${m.lat}, ${m.lon}], 11); selecionarMunicipio('${m.cod}', '${m.nome}')">
+                    onclick="selecionarMunicipio('${m.cod}', '${m.nome}')">
                     <span class="item-nome">${m.nome}</span>
                     <span class="item-votos">${m.votos.toLocaleString()}</span>
                 </div>
@@ -1792,14 +1632,20 @@
             if (!lista) return;
             
             if (!codMun) {
-                lista.innerHTML = '<div class="item-lista">Selecione um município</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Selecione um município</div>';
+                return;
+            }
+            
+            if (!state.locaisCarregados) {
+                lista.innerHTML = '<div class="mensagem-ajuda">⏳ Carregando locais...</div>';
                 return;
             }
             
             const locais = [];
             state.locaisGeo.forEach(l => {
                 if (l.CD_MUNICIPIO !== codMun) return;
-                const votos = state.candidato.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                
+                const votos = state.candidato?.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
                 if (votos > 0) {
                     locais.push({
                         cod: l.NR_LOCAL_VOTACAO,
@@ -1812,7 +1658,12 @@
             });
             
             if (locais.length === 0) {
-                lista.innerHTML = '<div class="item-lista">Nenhum local com votos</div>';
+                const totalLocaisCadastrados = state.locais.get(codMun)?.length || 0;
+                if (totalLocaisCadastrados > 0) {
+                    lista.innerHTML = `<div class="mensagem-ajuda">${totalLocaisCadastrados} locais cadastrados, mas sem votos em ${state.ano}</div>`;
+                } else {
+                    lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local de votação neste município</div>';
+                }
                 return;
             }
             
@@ -1822,19 +1673,19 @@
             }
             
             filtrados.sort((a, b) => b.votos - a.votos);
-            lista.innerHTML = filtrados.slice(0, 8).map(l => `
+            lista.innerHTML = filtrados.slice(0, 10).map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
-                    onclick="map.setView([${l.lat}, ${l.lon}], 16); selecionarLocal('${codMun}', '${l.cod}', '${l.nome}', '${state.municipios.get(codMun)}')">
+                    onclick="selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
                     <span class="item-nome">${l.nome}</span>
                     <span class="item-votos">${l.votos.toLocaleString()}</span>
                 </div>
             `).join('');
+            
+            console.log(`📍 ${filtrados.length} locais exibidos para o município ${codMun}`);
         }
         
         function atualizarGraficos() {
             if (!state.governador || !state.senador || !state.presidente) return;
-            
-            console.log('Atualizando gráficos de pizza para o ano:', state.ano);
             
             ['governador', 'senador', 'presidente'].forEach((cargo, i) => {
                 const votos = extrairVotosOutrosCargos(state[cargo], cargo);
@@ -1848,9 +1699,7 @@
                         type: 'pie',
                         labels: votos.slice(0, 5).map(v => v.nome),
                         values: votos.slice(0, 5).map(v => v.votos),
-                        marker: { 
-                            colors: votos.slice(0, 5).map(v => v.cor)
-                        },
+                        marker: { colors: votos.slice(0, 5).map(v => v.cor) },
                         textinfo: 'percent',
                         textposition: 'inside',
                         textfont: { color: 'white', size: 8 },
@@ -1886,6 +1735,32 @@
             
             atualizarGraficoBarras();
         }
+
+        // Funções auxiliares para os botões de teste
+        function selecionarPrimeiroMunicipio() {
+            if (municipiosCache.length > 0) {
+                const primeiro = municipiosCache[0];
+                console.log('Selecionando primeiro município:', primeiro.nome);
+                selecionarMunicipio(primeiro.cod, primeiro.nome);
+                
+                if (map) {
+                    map.setView([primeiro.lat, primeiro.lon], 11);
+                }
+            } else {
+                alert('Municípios ainda não carregados. Aguarde um momento.');
+            }
+        }
+
+        function forcarZoomLocais() {
+            if (map) {
+                const zoom = map.getZoom();
+                if (zoom < 11) {
+                    map.setZoom(11);
+                } else {
+                    map.setZoom(7);
+                }
+            }
+        }
         
         // EVENT LISTENER DO SLIDER
         document.getElementById('yearSlider').addEventListener('input', function(e) {
@@ -1894,8 +1769,6 @@
             municipiosCache = [];
             
             console.log('Ano alterado para:', state.ano);
-            
-            // Chama a função que atualiza tudo
             atualizarTudo();
         });
         
@@ -1919,6 +1792,7 @@
             }
         }
         
+        // Inicialização
         window.onload = function() {
             carregarDados();
             
@@ -1933,6 +1807,13 @@
                     setTimeout(selecionarEstadoInicial, 2000);
                 }
             }, 1500);
+            
+            // Verificar status a cada 5 segundos
+            setInterval(() => {
+                if (state.locaisCarregados) {
+                    atualizarStatusLocais();
+                }
+            }, 5000);
         };
     </script>
 </body>
