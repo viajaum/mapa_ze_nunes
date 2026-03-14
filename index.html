@@ -506,6 +506,81 @@
             font-size: 0.8em;
             font-weight: 600;
         }
+
+        .item-lista.sem-votos {
+            opacity: 0.7;
+            background: rgba(200,200,200,0.3);
+        }
+        .item-lista.sem-votos:hover {
+            background: rgba(180,180,180,0.5);
+        }
+
+        /* Botões de teste */
+        .botoes-teste {
+            display: flex;
+            gap: 5px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.4);
+            pointer-events: auto;
+        }
+
+        .btn-teste {
+            flex: 1;
+            background: var(--vermelho-principal);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-teste:hover {
+            background: #a52a2a;
+            transform: translateY(-2px);
+        }
+
+        .btn-teste.secondary {
+            background: var(--dourado-principal);
+        }
+
+        .btn-teste.secondary:hover {
+            background: #e6b422;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            top: 110px;
+            right: 100px;
+            z-index: 40;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(5px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(224,224,224,0.5);
+            color: var(--texto-principal);
+        }
+
+        .status-ok { color: green; font-weight: bold; }
+        .status-warning { color: orange; font-weight: bold; }
+        .status-error { color: red; font-weight: bold; }
+
+        /* Mensagens de ajuda */
+        .mensagem-ajuda {
+            padding: 10px;
+            text-align: center;
+            color: var(--texto-secundario);
+            font-style: italic;
+            background: rgba(255,255,255,0.5);
+            border-radius: 5px;
+        }
         
         @media (max-width: 1200px) {
             .container { 
@@ -531,6 +606,11 @@
         <div class="controles-zoom" id="zoomInfo">
             <span id="nivelZoom">7</span> | <span id="camadaAtiva">Municípios</span>
         </div>
+    </div>
+
+    <!-- Status indicator -->
+    <div class="status-indicator" id="statusIndicator">
+        <span>Locais: </span><span id="statusLocais" class="status-warning">⏳ Carregando...</span>
     </div>
     
     <!-- Header -->
@@ -628,6 +708,19 @@
         
         <!-- Coluna Direita -->
         <div class="coluna-direita">
+            <!-- Botões de teste -->
+            <div class="botoes-teste">
+                <button class="btn-teste" onclick="selecionarPrimeiroMunicipio()">
+                    🏛️ 1º Município
+                </button>
+                <button class="btn-teste secondary" onclick="debugLocais()">
+                    🔍 Debug Locais
+                </button>
+                <button class="btn-teste" onclick="forcarZoomLocais()">
+                    🔎 Ver Locais
+                </button>
+            </div>
+
             <!-- Slider -->
             <div class="slider-container">
                 <div class="slider-label">
@@ -649,33 +742,36 @@
                         <span>Municípios</span>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="buscaMunicipios" placeholder="Buscar...">
+                        <input type="text" id="buscaMunicipios" placeholder="Buscar município...">
                     </div>
-                    <div class="lista" id="listaMunicipios"></div>
+                    <div class="lista" id="listaMunicipios">
+                        <div class="mensagem-ajuda">Carregando municípios...</div>
+                    </div>
                 </div>
                 
                 <div class="component lista-component">
                     <div class="component-header">
-                        <span>Locais</span>
+                        <span>Locais de Votação</span>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="buscaLocais" placeholder="Buscar..." disabled>
+                        <input type="text" id="buscaLocais" placeholder="Buscar local..." disabled>
                     </div>
-                    <div class="lista" id="listaLocais"></div>
+                    <div class="lista" id="listaLocais">
+                        <div class="mensagem-ajuda">Selecione um município</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
             
     <script>
-        // ===== ÚNICA MODIFICAÇÃO: Base URL para GitHub Pages =====
-        const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? '' 
-            : '/mapa_ze_nunes';
+        // ===== CONFIGURAÇÃO AUTOMÁTICA DE AMBIENTE =====
+        const BASE_URL = window.location.hostname.includes('github.io') ? '/mapa_ze_nunes' : '';
         console.log('🌍 Ambiente:', window.location.hostname);
         console.log('📁 Usando BASE_URL:', BASE_URL || '(diretório local)');
+        console.log('🔗 URL completa:', window.location.href);
 
-        // Estado global (original)
+        // Estado global
         const state = {
             governador: null,
             senador: null,
@@ -704,6 +800,73 @@
         let map, graficoEvolucao, graficoBarrasDeputados;
         let camadaMunicipios, clusterLocais;
         let municipiosCache = [];
+        
+        // Função de debug aprimorada
+        function debugLog(context, data) {
+            console.log(`[DEBUG] ${context}:`, data);
+        }
+
+        // Função para atualizar status dos locais
+        function atualizarStatusLocais() {
+            const statusEl = document.getElementById('statusLocais');
+            if (!statusEl) return;
+            
+            if (!state.locaisCarregados) {
+                statusEl.className = 'status-warning';
+                statusEl.textContent = '⏳ Carregando...';
+            } else {
+                const totalLocais = state.locaisGeo.length;
+                const municipiosComLocais = state.locais.size;
+                statusEl.className = 'status-ok';
+                statusEl.textContent = `✅ ${totalLocais} locais em ${municipiosComLocais} municípios`;
+            }
+        }
+
+        // Função de debug para locais
+        function debugLocais() {
+            console.log('=== 🔍 DEBUG LOCAIS ===');
+            console.log('state.locaisCarregados:', state.locaisCarregados);
+            console.log('state.locaisGeo length:', state.locaisGeo?.length || 0);
+            console.log('state.locais Map size:', state.locais?.size || 0);
+            
+            // Mostrar primeiros 5 municípios com locais
+            console.log('Primeiros municípios com locais:');
+            let count = 0;
+            for (let [cod, locais] of state.locais) {
+                if (count++ < 5) {
+                    console.log(`  ${cod}: ${locais.length} locais`);
+                }
+            }
+            
+            // Verificar locais com votos no ano atual
+            if (state.candidato && state.ano) {
+                let totalLocaisComVotos = 0;
+                let totalVotos = 0;
+                state.locaisGeo.forEach(l => {
+                    const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                    if (votos > 0) {
+                        totalLocaisComVotos++;
+                        totalVotos += votos;
+                    }
+                });
+                console.log('Locais com votos em', state.ano, ':', totalLocaisComVotos);
+                console.log('Total de votos em locais:', totalVotos);
+            }
+            
+            // Verificar elemento da lista
+            const listaLocaisEl = document.getElementById('listaLocais');
+            console.log('Elemento listaLocais:', listaLocaisEl);
+            console.log('HTML atual da lista:', listaLocaisEl?.innerHTML);
+            
+            // Verificar município selecionado
+            console.log('Município selecionado:', state.municipioSelecionado);
+            if (state.municipioSelecionado) {
+                const locaisDoMun = state.locais.get(state.municipioSelecionado);
+                console.log('Locais cadastrados neste município:', locaisDoMun?.length || 0);
+            }
+            
+            atualizarStatusLocais();
+        }
 
         function getAnoAnterior(ano) {
             if (ano === '2014') return null;
@@ -728,18 +891,19 @@
         }
         
         function getTamanhoCirculo(votos, tipo) {
-            if (votos === 0) return 0;
+            if (votos === 0) return 5; // Tamanho mínimo para locais sem votos
+            if (tipo === 'local' && votos < 10) return 6;
             
-            if (votos < 50) return 3;
-            if (votos < 150) return 5;
-            if (votos < 350) return 10;
-            if (votos < 600) return 16;
-            if (votos < 900) return 23;
-            if (votos < 1300) return 31;
-            if (votos < 1800) return 40;
+            if (votos < 50) return 8;
+            if (votos < 150) return 12;
+            if (votos < 350) return 16;
+            if (votos < 600) return 22;
+            if (votos < 900) return 28;
+            if (votos < 1300) return 35;
+            if (votos < 1800) return 42;
             if (votos < 2500) return 50;
-            if (votos < 3500) return 61;
-            if (votos < 5000) return 73;
+            if (votos < 3500) return 58;
+            if (votos < 5000) return 65;
             return 75;
         }
 
@@ -832,6 +996,7 @@
             
             let dadosArray = [];
             
+            // PRIORIDADE 1: Local específico
             if (state.localSelecionado && state.municipioSelecionado) {
                 const municipioData = dadosAno.municipios?.[state.municipioSelecionado];
                 if (municipioData && municipioData.locais && municipioData.locais[state.localSelecionado]) {
@@ -839,6 +1004,7 @@
                 }
             }
             
+            // PRIORIDADE 2: Município selecionado
             if (dadosArray.length === 0 && state.municipioSelecionado) {
                 const municipioData = dadosAno.municipios?.[state.municipioSelecionado];
                 if (municipioData && municipioData.top10) {
@@ -846,6 +1012,7 @@
                 }
             }
             
+            // PRIORIDADE 3: Estado
             if (dadosArray.length === 0 && dadosAno.estado) {
                 dadosArray = dadosAno.estado;
             }
@@ -856,13 +1023,16 @@
         // Função para obter informações do deputado
         function getDeputadoInfo(nomeCandidato, ano) {
             if (!state.candidatosDeputados) return null;
+            
             if (!state.candidatosDeputados.deputado_estadual) return null;
             
             const dadosAno = state.candidatosDeputados.deputado_estadual[ano];
             if (!dadosAno) return null;
             
+            // 1. Correspondência exata
             if (dadosAno[nomeCandidato]) return dadosAno[nomeCandidato];
             
+            // 2. Remove acentos e converte para maiúsculas
             const nomeNormalizado = nomeCandidato
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
@@ -871,6 +1041,7 @@
             
             const palavrasCandidato = nomeNormalizado.split(' ').filter(p => p.length > 2);
             
+            // Busca por melhor match
             let melhorMatch = null;
             let maiorPontuacao = 0;
             
@@ -883,6 +1054,7 @@
                 
                 const palavrasConfig = nomeConfigNormalizado.split(' ').filter(p => p.length > 2);
                 
+                // Calcula pontuação
                 let pontuacao = 0;
                 
                 if (nomeNormalizado.includes(nomeConfigNormalizado) || nomeConfigNormalizado.includes(nomeNormalizado)) {
@@ -1046,6 +1218,8 @@
 
         // Função para atualizar tudo quando o ano mudar
         function atualizarTudo() {
+            console.log('Executando atualizarTudo para o ano:', state.ano);
+            
             try { atualizarMapa(); } catch (e) { console.error('Erro ao atualizar mapa:', e); }
             
             try {
@@ -1070,7 +1244,6 @@
             try {
                 console.log('Carregando dados...');
                 
-                // ÚNICA MODIFICAÇÃO: Adicionar BASE_URL antes dos arquivos
                 const [gov, sen, pres, cand, config, top10, deputadosConfig] = await Promise.all([
                     fetch(`${BASE_URL}/dados_governador.json`).then(r => r.json()),
                     fetch(`${BASE_URL}/dados_senador.json`).then(r => r.json()),
@@ -1129,15 +1302,21 @@
         
         async function processarLocais() {
             try {
+                console.log('🟢 Carregando locais de votação...');
                 const locaisText = await fetch(`${BASE_URL}/locais_votacao_RS_geocodificado.csv`).then(r => r.text());
+                
                 Papa.parse(locaisText, {
                     header: true,
                     complete: (results) => {
+                        console.log('CSV de locais parseado, linhas:', results.data.length);
+                        
                         state.locaisGeo = results.data.filter(l => {
                             const lat = parseFloat(l.LATITUDE);
                             const lon = parseFloat(l.LONGITUDE);
-                            return !isNaN(lat) && !isNaN(lon);
+                            return !isNaN(lat) && !isNaN(lon) && l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO;
                         });
+                        
+                        console.log('Locais com coordenadas válidas:', state.locaisGeo.length);
                         
                         results.data.forEach(l => {
                             if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
@@ -1150,13 +1329,30 @@
                                 });
                             }
                         });
+                        
                         state.locaisCarregados = true;
-                        console.log('✅ Locais carregados:', state.locaisGeo.length);
+                        
+                        // Estatísticas
+                        let totalLocais = 0;
+                        state.locais.forEach((locais, mun) => {
+                            totalLocais += locais.length;
+                        });
+                        console.log('✅ Locais processados:', {
+                            municipiosComLocais: state.locais.size,
+                            totalLocaisCadastrados: totalLocais,
+                            locaisGeorreferenciados: state.locaisGeo.length
+                        });
+                        
+                        atualizarStatusLocais();
+                        
                         if (map) atualizarMapa();
+                        if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
                     }
                 });
             } catch (error) {
-                console.warn('⚠️ Erro ao carregar locais');
+                console.error('❌ Erro ao carregar locais:', error);
+                document.getElementById('statusLocais').className = 'status-error';
+                document.getElementById('statusLocais').textContent = '❌ Erro ao carregar';
             }
         }
         
@@ -1225,8 +1421,11 @@
                 }
             });
             
-            // LOCAIS
+            // LOCAIS - VERSÃO MODIFICADA PARA MOSTRAR TODOS
             if (state.locaisCarregados) {
+                let locaisComVotos = 0;
+                let locaisSemVotos = 0;
+                
                 state.locaisGeo.forEach(l => {
                     try {
                         const lat = parseFloat(l.LATITUDE);
@@ -1235,22 +1434,48 @@
                         if (isNaN(lat) || isNaN(lon)) return;
                         
                         const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                        
+                        let fillColor;
+                        let radius;
+                        
                         if (votos > 0) {
+                            // Tem votos - usa cor normal e tamanho proporcional
                             const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0) : 0;
-                            
-                            L.circleMarker([lat, lon], {
-                                radius: getTamanhoCirculo(votos, 'local'),
-                                color: '#333', weight: 1,
-                                fillColor: getCorPorEvolucao(votos, votosAnt, state.ano),
-                                fillOpacity: 0.7
-                            }).addTo(clusterLocais)
-                            .bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos.toLocaleString()}`)
-                            .on('click', () => selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO));
+                            fillColor = getCorPorEvolucao(votos, votosAnt, state.ano);
+                            radius = getTamanhoCirculo(votos, 'local');
+                            locaisComVotos++;
+                        } else {
+                            // NÃO tem votos - mostra em cinza e tamanho pequeno
+                            fillColor = '#CCCCCC';
+                            radius = 6;
+                            locaisSemVotos++;
                         }
+                        
+                        L.circleMarker([lat, lon], {
+                            radius: radius,
+                            color: '#333', 
+                            weight: 1,
+                            fillColor: fillColor,
+                            fillOpacity: 0.7
+                        }).addTo(clusterLocais)
+                        .bindPopup(`
+                            <b>${l.NM_LOCAL}</b><br>
+                            ${l.NM_MUNICIPIO}<br>
+                            ${votos > 0 ? `${state.ano}: ${votos.toLocaleString()} votos` : 'Sem votos registrados'}
+                        `)
+                        .on('click', () => {
+                            if (votos > 0) {
+                                selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO);
+                            } else {
+                                alert('Este local não tem votos registrados para Zé Nunes');
+                            }
+                        });
+                        
                     } catch (e) {
                         console.error('Erro ao adicionar local:', e);
                     }
                 });
+                console.log(`🗺️ ${locaisComVotos} locais com votos + ${locaisSemVotos} locais sem votos = ${locaisComVotos + locaisSemVotos} locais no mapa`);
             }
             
             map.fire('zoomend');
@@ -1300,6 +1525,7 @@
         }
         
         function selecionarMunicipio(cod, nome) {
+            console.log('Selecionando município:', cod, nome);
             state.municipioSelecionado = cod;
             state.localSelecionado = null;
             document.getElementById('buscaLocais').disabled = false;
@@ -1313,6 +1539,7 @@
         }
         
         function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
+            console.log('Selecionando local:', codMun, codLocal, nomeLocal);
             state.municipioSelecionado = codMun;
             state.localSelecionado = codLocal;
             
@@ -1336,6 +1563,7 @@
         }
         
         function limparSelecao() {
+            console.log('Limpando seleção');
             state.municipioSelecionado = null;
             state.localSelecionado = null;
             document.getElementById('buscaLocais').disabled = true;
@@ -1401,7 +1629,7 @@
             if (!lista) return;
             
             if (!state.candidato) {
-                lista.innerHTML = '<div class="item-lista">Carregando...</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Carregando...</div>';
                 return;
             }
             
@@ -1427,13 +1655,13 @@
             filtrados.sort((a, b) => b.votos - a.votos);
             
             if (filtrados.length === 0) {
-                lista.innerHTML = '<div class="item-lista">Nenhum município encontrado</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum município encontrado</div>';
                 return;
             }
             
-            lista.innerHTML = filtrados.slice(0, 12).map(m => `
+            lista.innerHTML = filtrados.slice(0, 15).map(m => `
                 <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
-                    onclick="map.setView([${m.lat}, ${m.lon}], 11); selecionarMunicipio('${m.cod}', '${m.nome}')">
+                    onclick="selecionarMunicipio('${m.cod}', '${m.nome}')">
                     <span class="item-nome">${m.nome}</span>
                     <span class="item-votos">${m.votos.toLocaleString()}</span>
                 </div>
@@ -1445,27 +1673,34 @@
             if (!lista) return;
             
             if (!codMun) {
-                lista.innerHTML = '<div class="item-lista">Selecione um município</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Selecione um município</div>';
+                return;
+            }
+            
+            if (!state.locaisCarregados) {
+                lista.innerHTML = '<div class="mensagem-ajuda">⏳ Carregando locais...</div>';
                 return;
             }
             
             const locais = [];
             state.locaisGeo.forEach(l => {
                 if (l.CD_MUNICIPIO !== codMun) return;
-                const votos = state.candidato.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
-                if (votos > 0) {
-                    locais.push({
-                        cod: l.NR_LOCAL_VOTACAO,
-                        nome: l.NM_LOCAL,
-                        votos,
-                        lat: parseFloat(l.LATITUDE),
-                        lon: parseFloat(l.LONGITUDE)
-                    });
-                }
+                
+                const votos = state.candidato?.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                
+                // MOSTRA TODOS OS LOCAIS, mesmo sem votos
+                locais.push({
+                    cod: l.NR_LOCAL_VOTACAO,
+                    nome: l.NM_LOCAL,
+                    votos: votos,
+                    lat: parseFloat(l.LATITUDE),
+                    lon: parseFloat(l.LONGITUDE),
+                    temVotos: votos > 0
+                });
             });
             
             if (locais.length === 0) {
-                lista.innerHTML = '<div class="item-lista">Nenhum local com votos</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local encontrado neste município</div>';
                 return;
             }
             
@@ -1474,14 +1709,24 @@
                 filtrados = locais.filter(l => l.nome.toLowerCase().includes(state.buscaLocais.toLowerCase()));
             }
             
-            filtrados.sort((a, b) => b.votos - a.votos);
-            lista.innerHTML = filtrados.slice(0, 8).map(l => `
-                <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
-                    onclick="map.setView([${l.lat}, ${l.lon}], 16); selecionarLocal('${codMun}', '${l.cod}', '${l.nome}', '${state.municipios.get(codMun)}')">
+            // Ordena: primeiro os que têm votos, depois os sem votos
+            filtrados.sort((a, b) => {
+                if (a.temVotos && !b.temVotos) return -1;
+                if (!a.temVotos && b.temVotos) return 1;
+                return b.votos - a.votos;
+            });
+            
+            lista.innerHTML = filtrados.slice(0, 10).map(l => `
+                <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''} ${!l.temVotos ? 'sem-votos' : ''}"
+                    onclick="map.setView([${l.lat}, ${l.lon}], 16); ${l.temVotos ? `selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')` : 'alert(\'Local sem votos para Zé Nunes\')'}">
                     <span class="item-nome">${l.nome}</span>
-                    <span class="item-votos">${l.votos.toLocaleString()}</span>
+                    <span class="item-votos" style="${!l.temVotos ? 'background:#ccc; color:#666;' : ''}">
+                        ${l.temVotos ? l.votos.toLocaleString() : '0'}
+                    </span>
                 </div>
             `).join('');
+            
+            console.log(`📍 ${filtrados.length} locais exibidos para o município ${codMun} (${filtrados.filter(l => l.temVotos).length} com votos)`);
         }
         
         function atualizarGraficos() {
@@ -1532,13 +1777,43 @@
             
             atualizarListaMunicipios();
             if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
+            
             atualizarGraficoBarras();
         }
+
+        // Funções auxiliares para os botões de teste
+        function selecionarPrimeiroMunicipio() {
+            if (municipiosCache.length > 0) {
+                const primeiro = municipiosCache[0];
+                console.log('Selecionando primeiro município:', primeiro.nome);
+                selecionarMunicipio(primeiro.cod, primeiro.nome);
+                
+                if (map) {
+                    map.setView([primeiro.lat, primeiro.lon], 11);
+                }
+            } else {
+                alert('Municípios ainda não carregados. Aguarde um momento.');
+            }
+        }
+
+        function forcarZoomLocais() {
+            if (map) {
+                const zoom = map.getZoom();
+                if (zoom < 11) {
+                    map.setZoom(11);
+                } else {
+                    map.setZoom(7);
+                }
+            }
+        }
         
+        // EVENT LISTENER DO SLIDER
         document.getElementById('yearSlider').addEventListener('input', function(e) {
             state.ano = e.target.value;
             document.getElementById('yearDisplay').textContent = state.ano;
             municipiosCache = [];
+            
+            console.log('Ano alterado para:', state.ano);
             atualizarTudo();
         });
         
@@ -1562,6 +1837,7 @@
             }
         }
         
+        // Inicialização
         window.onload = function() {
             carregarDados();
             
@@ -1576,6 +1852,13 @@
                     setTimeout(selecionarEstadoInicial, 2000);
                 }
             }, 1500);
+            
+            // Verificar status a cada 5 segundos
+            setInterval(() => {
+                if (state.locaisCarregados) {
+                    atualizarStatusLocais();
+                }
+            }, 5000);
         };
     </script>
 </body>
