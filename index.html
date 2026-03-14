@@ -712,6 +712,15 @@
                     🔎 Ver Locais
                 </button>
             </div>
+            <!-- Botão para testar arquivos -->
+            <div class="botoes-teste" style="margin-top: 5px;">
+                <button class="btn-teste" onclick="testarArquivos()" style="background: #4CAF50;">
+                    📁 Testar Arquivos
+                </button>
+                <button class="btn-teste" onclick="diagnosticarVotosLocais()" style="background: #FF9800;">
+                    📊 Diagnóstico
+                </button>
+            </div>
 
             <!-- Slider -->
             <div class="slider-container">
@@ -757,6 +766,13 @@
     </div>
             
     <script>
+        // ===== CONFIGURAÇÃO DE AMBIENTE =====
+        // Detectar se está no GitHub Pages e ajustar base URL
+        const BASE_URL = window.location.hostname.includes('github.io') ? '/mapa_ze_nunes' : '';
+        console.log('🌍 Ambiente:', window.location.hostname);
+        console.log('📁 Base URL:', BASE_URL || '(raiz)');
+        console.log('🔗 URL completa:', window.location.href);
+
         // Estado global
         const state = {
             governador: null,
@@ -790,6 +806,94 @@
         // Função de debug aprimorada
         function debugLog(context, data) {
             console.log(`[DEBUG] ${context}:`, data);
+        }
+
+        // Função para testar acesso aos arquivos
+        async function testarArquivos() {
+            console.log('=== TESTANDO ACESSO AOS ARQUIVOS ===');
+            console.log('Base URL:', BASE_URL);
+            
+            const arquivos = [
+                'dados_governador.json',
+                'dados_senador.json',
+                'dados_presidente_rs.json',
+                'candidato_13500_RS.json',
+                'candidatos_config.json',
+                'top10_deputado_estadual_RS.json',
+                'candidatos_deputado_estadual_RS.json',
+                'municipios_RS_geocodificado.csv',
+                'locais_votacao_RS_geocodificado.csv'
+            ];
+            
+            for (const arquivo of arquivos) {
+                try {
+                    const url = `${BASE_URL}/${arquivo}`;
+                    console.log(`Testando: ${url}`);
+                    const response = await fetch(url, { method: 'HEAD' });
+                    console.log(`${response.ok ? '✅' : '❌'} ${arquivo}: ${response.status} ${response.statusText}`);
+                } catch (error) {
+                    console.log(`❌ ${arquivo}: Erro de rede - ${error.message}`);
+                }
+            }
+        }
+
+        // Função para diagnosticar votos em locais
+        function diagnosticarVotosLocais() {
+            console.log('=== DIAGNÓSTICO DE VOTOS EM LOCAIS ===');
+            
+            if (!state.candidato) {
+                console.log('❌ state.candidato não carregado');
+                return;
+            }
+            
+            const ano = state.ano;
+            console.log('Analisando votos para o ano:', ano);
+            
+            let totalLocaisComVotos = 0;
+            let totalVotosEmLocais = 0;
+            let municipiosComLocaisComVotos = new Set();
+            
+            // Percorre todos os locais georreferenciados
+            state.locaisGeo.forEach(l => {
+                const votos = state.candidato.anos[ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                
+                if (votos > 0) {
+                    totalLocaisComVotos++;
+                    totalVotosEmLocais += votos;
+                    municipiosComLocaisComVotos.add(l.CD_MUNICIPIO);
+                    
+                    // Mostra os primeiros 5 locais com votos
+                    if (totalLocaisComVotos <= 5) {
+                        console.log(`📍 Local com votos: ${l.NM_LOCAL} (${l.NM_MUNICIPIO}) - ${votos} votos`);
+                    }
+                }
+            });
+            
+            console.log('📊 RESULTADO:', {
+                totalLocaisGeorreferenciados: state.locaisGeo.length,
+                locaisComVotos: totalLocaisComVotos,
+                totalVotosEmLocais: totalVotosEmLocais,
+                municipiosComLocaisComVotos: municipiosComLocaisComVotos.size
+            });
+            
+            // Verifica se há dados de locais na estrutura do candidato
+            if (state.candidato.anos[ano]) {
+                const dadosAno = state.candidato.anos[ano];
+                let totalLocaisNaEstrutura = 0;
+                
+                if (dadosAno.municipios) {
+                    Object.keys(dadosAno.municipios).forEach(codMun => {
+                        const municipio = dadosAno.municipios[codMun];
+                        if (municipio.locais) {
+                            totalLocaisNaEstrutura += Object.keys(municipio.locais).length;
+                        }
+                    });
+                }
+                
+                console.log('📁 Locais na estrutura de dados do candidato:', totalLocaisNaEstrutura);
+            }
+            
+            alert(`Diagnóstico concluído. Verifique o console (F12) para detalhes.`);
         }
 
         // Função para atualizar status dos locais
@@ -1228,15 +1332,37 @@
         async function carregarDados() {
             try {
                 console.log('Carregando dados...');
+                console.log('Usando BASE_URL:', BASE_URL);
                 
                 const [gov, sen, pres, cand, config, top10, deputadosConfig] = await Promise.all([
-                    fetch('dados_governador.json').then(r => r.json()),
-                    fetch('dados_senador.json').then(r => r.json()),
-                    fetch('dados_presidente_rs.json').then(r => r.json()),
-                    fetch('candidato_13500_RS.json').then(r => r.json()),
-                    fetch('candidatos_config.json').then(r => r.json()),
-                    fetch('top10_deputado_estadual_RS.json').then(r => r.json()),
-                    fetch('candidatos_deputado_estadual_RS.json').then(r => r.json())
+                    fetch(`${BASE_URL}/dados_governador.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: dados_governador.json`);
+                        return r.json();
+                    }),
+                    fetch(`${BASE_URL}/dados_senador.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: dados_senador.json`);
+                        return r.json();
+                    }),
+                    fetch(`${BASE_URL}/dados_presidente_rs.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: dados_presidente_rs.json`);
+                        return r.json();
+                    }),
+                    fetch(`${BASE_URL}/candidato_13500_RS.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: candidato_13500_RS.json`);
+                        return r.json();
+                    }),
+                    fetch(`${BASE_URL}/candidatos_config.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: candidatos_config.json`);
+                        return r.json();
+                    }),
+                    fetch(`${BASE_URL}/top10_deputado_estadual_RS.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: top10_deputado_estadual_RS.json`);
+                        return r.json();
+                    }),
+                    fetch(`${BASE_URL}/candidatos_deputado_estadual_RS.json`).then(r => {
+                        if (!r.ok) throw new Error(`HTTP ${r.status}: candidatos_deputado_estadual_RS.json`);
+                        return r.json();
+                    })
                 ]);
 
                 console.log('✅ Dados carregados com sucesso');
@@ -1251,7 +1377,11 @@
                     candidatosDeputados: deputadosConfig
                 });
                 
-                const municipiosText = await fetch('municipios_RS_geocodificado.csv').then(r => r.text());
+                const municipiosText = await fetch(`${BASE_URL}/municipios_RS_geocodificado.csv`).then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}: municipios_RS_geocodificado.csv`);
+                    return r.text();
+                });
+                
                 Papa.parse(municipiosText, {
                     header: true,
                     complete: (results) => {
@@ -1282,13 +1412,17 @@
                 });
             } catch (error) {
                 console.error('❌ Erro ao carregar dados:', error);
+                alert(`Erro ao carregar dados: ${error.message}. Verifique se os arquivos existem no GitHub.`);
             }
         }
         
         async function processarLocais() {
             try {
                 console.log('🟢 Carregando locais de votação...');
-                const locaisText = await fetch('locais_votacao_RS_geocodificado.csv').then(r => r.text());
+                const locaisText = await fetch(`${BASE_URL}/locais_votacao_RS_geocodificado.csv`).then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}: locais_votacao_RS_geocodificado.csv`);
+                    return r.text();
+                });
                 
                 Papa.parse(locaisText, {
                     header: true,
