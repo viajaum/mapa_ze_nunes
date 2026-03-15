@@ -22,7 +22,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* Seu CSS existente - mantenha igual */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
@@ -165,7 +164,7 @@
             gap: 20px;
         }
 
-        /* Coluna esquerda */
+        /* Coluna esquerda - ALINHADA NA PARTE INFERIOR */
         .coluna-esquerda {
             flex: 2.2;
             min-width: 0;
@@ -239,7 +238,7 @@
             width: 100%;
         }
 
-        /* Container inferior */
+        /* Container inferior - ALTURA REDUZIDA */
         .container-inferior {
             display: flex;
             flex-direction: row;
@@ -248,7 +247,7 @@
             flex: 0 0 auto;
             min-height: 0;
             width: 100%;
-            height: 25%;
+            height: 160px; /* Altura reduzida de 200px para 160px */
         }
 
         /* Coluna dos gráficos de pizza */
@@ -546,6 +545,49 @@
         .btn-teste.secondary:hover {
             background: #e6b422;
         }
+
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            top: 110px;
+            right: 100px;
+            z-index: 40;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(5px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(224,224,224,0.5);
+            color: var(--texto-principal);
+        }
+
+        .status-ok { color: green; font-weight: bold; }
+        .status-warning { color: orange; font-weight: bold; }
+        .status-error { color: red; font-weight: bold; }
+
+        /* Estilo personalizado para clusters */
+        .custom-cluster {
+            background: transparent;
+            border: none;
+        }
+
+        .custom-cluster div {
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            border: 2px solid white;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .custom-cluster div:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.4);
+            cursor: pointer;
+        }
         
         @media (max-width: 1200px) {
             .container { 
@@ -571,6 +613,11 @@
         <div class="controles-zoom" id="zoomInfo">
             <span id="nivelZoom">7</span> | <span id="camadaAtiva">Municípios</span>
         </div>
+    </div>
+
+    <!-- Status indicator -->
+    <div class="status-indicator" id="statusIndicator">
+        <span>Locais: </span><span id="statusLocais" class="status-warning">⏳ Carregando...</span>
     </div>
     
     <!-- Header -->
@@ -668,6 +715,19 @@
         
         <!-- Coluna Direita -->
         <div class="coluna-direita">
+            <!-- Botões de teste -->
+            <div class="botoes-teste">
+                <button class="btn-teste" onclick="selecionarPrimeiroMunicipio()">
+                    🏛️ 1º Município
+                </button>
+                <button class="btn-teste secondary" onclick="diagnosticarCompleto()">
+                    🔍 Diagnóstico
+                </button>
+                <button class="btn-teste" onclick="forcarZoomLocais()">
+                    🔎 Zoom Locais
+                </button>
+            </div>
+
             <!-- Slider -->
             <div class="slider-container">
                 <div class="slider-label">
@@ -682,19 +742,6 @@
                 </div>
             </div>
             
-            <!-- Botões de teste -->
-            <div class="botoes-teste">
-                <button class="btn-teste" onclick="selecionarPrimeiroMunicipio()">
-                    🏛️ 1º Município
-                </button>
-                <button class="btn-teste secondary" onclick="diagnosticarCompleto()">
-                    🔍 Diagnóstico
-                </button>
-                <button class="btn-teste" onclick="forcarZoomLocais()">
-                    🔎 Zoom Locais
-                </button>
-            </div>
-            
             <!-- Listas -->
             <div class="listas-container">
                 <div class="component lista-component">
@@ -702,19 +749,23 @@
                         <span>Municípios</span>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="buscaMunicipios" placeholder="Buscar...">
+                        <input type="text" id="buscaMunicipios" placeholder="Buscar município...">
                     </div>
-                    <div class="lista" id="listaMunicipios"></div>
+                    <div class="lista" id="listaMunicipios">
+                        <div class="mensagem-ajuda">Carregando municípios...</div>
+                    </div>
                 </div>
                 
                 <div class="component lista-component">
                     <div class="component-header">
-                        <span>Locais</span>
+                        <span>Locais de Votação</span>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="buscaLocais" placeholder="Buscar..." disabled>
+                        <input type="text" id="buscaLocais" placeholder="Buscar local..." disabled>
                     </div>
-                    <div class="lista" id="listaLocais"></div>
+                    <div class="lista" id="listaLocais">
+                        <div class="mensagem-ajuda">Selecione um município</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -744,7 +795,12 @@
             localSelecionado: null,
             locaisCarregados: false,
             buscaMunicipios: '',
-            buscaLocais: ''
+            buscaLocais: '',
+            debug: {
+                top10Data: null,
+                deputadosConfig: null,
+                lastError: null
+            }
         };
         
         let map, graficoEvolucao, graficoBarrasDeputados;
@@ -1233,7 +1289,59 @@
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
             
             camadaMunicipios = L.layerGroup().addTo(map);
-            clusterLocais = L.markerClusterGroup({ maxClusterRadius: 35 });
+            
+            // CLUSTER PERSONALIZADO - CORES ALTERADAS
+            clusterLocais = L.markerClusterGroup({ 
+                maxClusterRadius: 35,
+                iconCreateFunction: function(cluster) {
+                    var markers = cluster.getAllChildMarkers();
+                    var childCount = cluster.getChildCount();
+                    
+                    // Calcular média de votos para decidir a cor
+                    var totalVotos = 0;
+                    markers.forEach(marker => {
+                        if (marker.votos) totalVotos += marker.votos;
+                    });
+                    var mediaVotos = childCount > 0 ? totalVotos / childCount : 0;
+                    
+                    var backgroundColor;
+                    
+                    // Escolher cor baseado na média de votos
+                    if (mediaVotos > 1000) {
+                        backgroundColor = '#8B1E1E'; // Vermelho escuro - muitos votos
+                    } else if (mediaVotos > 500) {
+                        backgroundColor = '#D4A017'; // Dourado - médios votos
+                    } else if (mediaVotos > 100) {
+                        backgroundColor = '#2E8B57'; // Verde - poucos votos
+                    } else if (mediaVotos > 0) {
+                        backgroundColor = '#4682B4'; // Azul - muito poucos votos
+                    } else {
+                        backgroundColor = '#808080'; // Cinza - sem votos
+                    }
+                    
+                    // Criar HTML com estilo personalizado
+                    var html = '<div style="' +
+                        'background-color: ' + backgroundColor + ';' +
+                        'width: 46px; height: 46px;' +
+                        'border-radius: 50%;' +
+                        'display: flex;' +
+                        'align-items: center;' +
+                        'justify-content: center;' +
+                        'color: white;' +
+                        'font-weight: bold;' +
+                        'font-size: 14px;' +
+                        'box-shadow: 0 3px 8px rgba(0,0,0,0.3);' +
+                        'border: 2px solid white;' +
+                        'text-shadow: 0 1px 2px rgba(0,0,0,0.5);' +
+                        '">' + childCount + '</div>';
+                    
+                    return L.divIcon({
+                        html: html,
+                        className: 'custom-cluster',
+                        iconSize: L.point(46, 46)
+                    });
+                }
+            });
             
             map.on('click', (e) => {
                 let clicouEmMarcador = false;
@@ -1315,14 +1423,13 @@
                         
                         const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO] || 0) : 0;
                         
-                        L.circleMarker([lat, lon], {
+                        var marker = L.circleMarker([lat, lon], {
                             radius: getTamanhoCirculo(votos, 'local'),
                             color: '#333',
                             weight: 1,
                             fillColor: votos > 0 ? getCorPorEvolucao(votos, votosAnt, state.ano) : '#CCCCCC',
                             fillOpacity: 0.8
-                        }).addTo(clusterLocais)
-                        .bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos} votos`)
+                        }).bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos} votos`)
                         .on('click', () => {
                             if (votos > 0) {
                                 selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO);
@@ -1331,6 +1438,10 @@
                             }
                         });
                         
+                        // Armazenar votos no marcador para uso nos clusters
+                        marker.votos = votos;
+                        
+                        marker.addTo(clusterLocais);
                         locaisAdicionados++;
                         
                     } catch (e) {
@@ -1488,7 +1599,7 @@
             if (!lista) return;
             
             if (!state.candidato) {
-                lista.innerHTML = '<div class="item-lista">Carregando...</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Carregando...</div>';
                 return;
             }
             
@@ -1514,13 +1625,13 @@
             filtrados.sort((a, b) => b.votos - a.votos);
             
             if (filtrados.length === 0) {
-                lista.innerHTML = '<div class="item-lista">Nenhum município encontrado</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum município encontrado</div>';
                 return;
             }
             
-            lista.innerHTML = filtrados.slice(0, 12).map(m => `
+            lista.innerHTML = filtrados.slice(0, 15).map(m => `
                 <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
-                    onclick="map.setView([${m.lat}, ${m.lon}], 11); selecionarMunicipio('${m.cod}', '${m.nome}')">
+                    onclick="selecionarMunicipio('${m.cod}', '${m.nome}')">
                     <span class="item-nome">${m.nome}</span>
                     <span class="item-votos">${m.votos.toLocaleString()}</span>
                 </div>
@@ -1532,7 +1643,7 @@
             if (!lista) return;
             
             if (!codMun) {
-                lista.innerHTML = '<div class="item-lista">Selecione um município</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Selecione um município</div>';
                 return;
             }
             
@@ -1552,7 +1663,7 @@
             });
             
             if (locais.length === 0) {
-                lista.innerHTML = '<div class="item-lista">Nenhum local com votos</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local com votos</div>';
                 return;
             }
             
@@ -1564,7 +1675,7 @@
             filtrados.sort((a, b) => b.votos - a.votos);
             lista.innerHTML = filtrados.slice(0, 8).map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
-                    onclick="map.setView([${l.lat}, ${l.lon}], 16); selecionarLocal('${codMun}', '${l.cod}', '${l.nome}', '${state.municipios.get(codMun)}')">
+                    onclick="map.setView([${l.lat}, ${l.lon}], 16); selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
                     <span class="item-nome">${l.nome}</span>
                     <span class="item-votos">${l.votos.toLocaleString()}</span>
                 </div>
@@ -1619,24 +1730,33 @@
             
             atualizarListaMunicipios();
             if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
+            
             atualizarGraficoBarras();
         }
 
-        // Funções auxiliares
+        // Funções auxiliares para os botões de teste
         function selecionarPrimeiroMunicipio() {
             if (municipiosCache.length > 0) {
                 const primeiro = municipiosCache[0];
+                console.log('Selecionando primeiro município:', primeiro.nome);
                 selecionarMunicipio(primeiro.cod, primeiro.nome);
-                if (map) map.setView([primeiro.lat, primeiro.lon], 11);
+                
+                if (map) {
+                    map.setView([primeiro.lat, primeiro.lon], 11);
+                }
             } else {
-                alert('Municípios ainda não carregados');
+                alert('Municípios ainda não carregados. Aguarde um momento.');
             }
         }
 
         function forcarZoomLocais() {
             if (map) {
                 const zoom = map.getZoom();
-                map.setZoom(zoom < 11 ? 11 : 7);
+                if (zoom < 11) {
+                    map.setZoom(11);
+                } else {
+                    map.setZoom(7);
+                }
             }
         }
 
@@ -1666,6 +1786,8 @@
             state.ano = e.target.value;
             document.getElementById('yearDisplay').textContent = state.ano;
             municipiosCache = [];
+            
+            console.log('Ano alterado para:', state.ano);
             atualizarTudo();
         });
         
@@ -1689,11 +1811,14 @@
             }
         }
         
+        // Inicialização
         window.onload = function() {
             carregarDados();
+            
             setTimeout(garantirSliderEm2022, 100);
             setTimeout(garantirSliderEm2022, 500);
             setTimeout(garantirSliderEm2022, 1000);
+            
             setTimeout(() => {
                 if (state.candidato) {
                     selecionarEstadoInicial();
