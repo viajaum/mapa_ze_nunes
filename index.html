@@ -851,7 +851,8 @@
                 let totalLocaisComVotos = 0;
                 let totalVotos = 0;
                 state.locaisGeo.forEach(l => {
-                    const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                    // CORREÇÃO: Acesso direto ao valor, não .votos
+                    const votos = state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO] || 0;
                     if (votos > 0) {
                         totalLocaisComVotos++;
                         totalVotos += votos;
@@ -954,7 +955,8 @@
                             dadosAno.municipios[state.municipioSelecionado] && 
                             dadosAno.municipios[state.municipioSelecionado].locais &&
                             dadosAno.municipios[state.municipioSelecionado].locais[state.localSelecionado]) {
-                            totalVotos = dadosAno.municipios[state.municipioSelecionado].locais[state.localSelecionado].votos || 0;
+                            // CORREÇÃO: Acesso direto ao valor, não .votos
+                            totalVotos = dadosAno.municipios[state.municipioSelecionado].locais[state.localSelecionado] || 0;
                         }
                     }
                     
@@ -1440,8 +1442,7 @@
                 }
             });
             
-            // LOCAIS - VERSÃO MODIFICADA PARA MOSTRAR TODOS
-            // LOCAIS - MOSTRA TODOS (COM DEBUG)
+            // LOCAIS - VERSÃO CORRIGIDA PARA ACESSAR VOTOS DIRETAMENTE
             if (state.locaisCarregados) {
                 console.log('📍 Adicionando locais ao mapa...');
                 let locaisAdicionados = 0;
@@ -1454,15 +1455,11 @@
                         
                         if (isNaN(lat) || isNaN(lon)) return;
                         
-                        // Tenta encontrar os votos em diferentes formatos
+                        // CORREÇÃO: Acesso direto ao valor, não .votos
                         let votos = 0;
                         
-                        // Formato 1: caminho completo
-                        if (state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos) {
-                            votos = state.candidato.anos[state.ano].municipios[l.CD_MUNICIPIO].locais[l.NR_LOCAL_VOTACAO].votos;
-                        }
-                        // Formato 2: votos direto no local
-                        else if (state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]) {
+                        // Verifica se existe o local e pega o valor direto
+                        if (state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO] !== undefined) {
                             votos = state.candidato.anos[state.ano].municipios[l.CD_MUNICIPIO].locais[l.NR_LOCAL_VOTACAO];
                         }
                         
@@ -1476,8 +1473,11 @@
                             });
                         }
                         
-                        const anoAnterior = getAnoAnterior(state.ano);
-                        const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0) : 0;
+                        // Busca votos do ano anterior para calcular evolução
+                        let votosAnt = 0;
+                        if (anoAnterior && state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO] !== undefined) {
+                            votosAnt = state.candidato.anos[anoAnterior].municipios[l.CD_MUNICIPIO].locais[l.NR_LOCAL_VOTACAO];
+                        }
                         
                         let fillColor;
                         if (votos > 0) {
@@ -1494,7 +1494,7 @@
                             fillColor: fillColor,
                             fillOpacity: 0.8
                         }).addTo(clusterLocais)
-                        .bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos.toLocaleString()} votos`)
+                        .bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos} votos`)
                         .on('click', () => selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO));
                         
                         locaisAdicionados++;
@@ -1620,9 +1620,10 @@
         }
         
         function atualizarEvolucaoLocal(codMun, codLocal) {
-            const v2014 = state.candidato.anos['2014']?.municipios[codMun]?.locais?.[codLocal]?.votos || 0;
-            const v2018 = state.candidato.anos['2018']?.municipios[codMun]?.locais?.[codLocal]?.votos || 0;
-            const v2022 = state.candidato.anos['2022']?.municipios[codMun]?.locais?.[codLocal]?.votos || 0;
+            // CORREÇÃO: Acesso direto ao valor, não .votos
+            const v2014 = state.candidato.anos['2014']?.municipios[codMun]?.locais?.[codLocal] || 0;
+            const v2018 = state.candidato.anos['2018']?.municipios[codMun]?.locais?.[codLocal] || 0;
+            const v2022 = state.candidato.anos['2022']?.municipios[codMun]?.locais?.[codLocal] || 0;
             criarGraficoEvolucao(v2014, v2018, v2022);
         }
         
@@ -1714,7 +1715,8 @@
             state.locaisGeo.forEach(l => {
                 if (l.CD_MUNICIPIO !== codMun) return;
                 
-                const votos = state.candidato?.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO]?.votos || 0;
+                // CORREÇÃO: Acesso direto ao valor, não .votos
+                const votos = state.candidato?.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO] || 0;
                 
                 // MOSTRA TODOS OS LOCAIS, mesmo sem votos
                 locais.push({
@@ -1908,7 +1910,7 @@
                         const primeiroLocal = Object.keys(municipio.locais)[0];
                         if (primeiroLocal) {
                             console.log(`🏛️ Exemplo do local ${primeiroLocal}:`, {
-                                votos: municipio.locais[primeiroLocal]?.votos
+                                votos: municipio.locais[primeiroLocal] // CORREÇÃO: não usa .votos
                             });
                         }
                     }
@@ -1918,7 +1920,8 @@
             // Verifica se os locais do CSV existem na estrutura
             if (state.locaisGeo.length > 0) {
                 const primeiroLocal = state.locaisGeo[0];
-                const votos = state.candidato.anos[ano]?.municipios[primeiroLocal.CD_MUNICIPIO]?.locais?.[primeiroLocal.NR_LOCAL_VOTACAO]?.votos;
+                // CORREÇÃO: Acesso direto ao valor, não .votos
+                const votos = state.candidato.anos[ano]?.municipios[primeiroLocal.CD_MUNICIPIO]?.locais?.[primeiroLocal.NR_LOCAL_VOTACAO];
                 console.log(`🔍 Teste com primeiro local do CSV:`, {
                     municipio: primeiroLocal.CD_MUNICIPIO,
                     local: primeiroLocal.NR_LOCAL_VOTACAO,
