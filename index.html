@@ -833,20 +833,24 @@
             }
         }
         
+        // FUNÇÃO MODIFICADA: Tamanhos mais proporcionais (menores para poucos votos)
         function getTamanhoCirculo(votos, tipo) {
-            if (votos === 0) return 5; // Tamanho mínimo para locais sem votos
+            if (votos === 0) return 3; // Tamanho mínimo reduzido
             
-            if (votos < 50) return 8;
-            if (votos < 150) return 12;
-            if (votos < 350) return 16;
-            if (votos < 600) return 22;
-            if (votos < 900) return 28;
-            if (votos < 1300) return 35;
-            if (votos < 1800) return 42;
-            if (votos < 2500) return 50;
-            if (votos < 3500) return 58;
-            if (votos < 5000) return 65;
-            return 75;
+            // Escala mais suave: de 4 a 60 (era de 8 a 75)
+            if (votos < 20) return 4;
+            if (votos < 50) return 6;
+            if (votos < 100) return 8;
+            if (votos < 200) return 11;
+            if (votos < 350) return 15;
+            if (votos < 600) return 20;
+            if (votos < 900) return 26;
+            if (votos < 1300) return 32;
+            if (votos < 1800) return 38;
+            if (votos < 2500) return 45;
+            if (votos < 3500) return 52;
+            if (votos < 5000) return 60;
+            return 70; // Máximo ligeiramente reduzido
         }
 
         function getCandidatoInfo(nomeCompleto, cargo, ano) {
@@ -1417,7 +1421,10 @@
                             fillOpacity: 0.8
                         }).addTo(camadaMunicipios)
                         .bindPopup(`<b>${geo.nome}</b><br>${state.ano}: ${votos.toLocaleString()} votos`)
-                        .on('click', () => selecionarMunicipio(cod, geo.nome));
+                        .on('click', () => {
+                            // Clique no mapa: mantém o zoom atual
+                            selecionarMunicipioMapa(cod, geo.nome);
+                        });
                     }
                 } catch (e) {
                     console.error(`Erro ao adicionar município ${geo.nome}:`, e);
@@ -1455,7 +1462,8 @@
                         }).bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos} votos`)
                         .on('click', () => {
                             if (votos > 0) {
-                                selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO);
+                                // Clique no mapa: mantém o zoom atual
+                                selecionarLocalMapa(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO);
                             } else {
                                 // Para locais sem votos, centraliza mantendo o zoom atual
                                 const zoomAtual = map.getZoom();
@@ -1522,8 +1530,8 @@
             }, 50);
         }
         
-        // FUNÇÃO MODIFICADA - Centraliza mantendo o zoom atual
-        function selecionarMunicipio(cod, nome) {
+        // FUNÇÃO PARA CLIQUE NO MAPA (mantém zoom atual)
+        function selecionarMunicipioMapa(cod, nome) {
             state.municipioSelecionado = cod;
             state.localSelecionado = null;
             document.getElementById('buscaLocais').disabled = false;
@@ -1543,8 +1551,28 @@
             }
         }
         
-        // FUNÇÃO MODIFICADA - Centraliza mantendo o zoom atual
-        function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
+        // FUNÇÃO PARA CLIQUE NA LISTA (zoom 11)
+        function selecionarMunicipio(cod, nome) {
+            state.municipioSelecionado = cod;
+            state.localSelecionado = null;
+            document.getElementById('buscaLocais').disabled = false;
+            document.getElementById('buscaLocais').value = '';
+            state.buscaLocais = '';
+            atualizarEvolucao();
+            atualizarListaLocais(cod);
+            atualizarTituloSelecao();
+            atualizarListaMunicipios();
+            atualizarGraficos();
+            
+            // Centralizar no município COM ZOOM 11
+            const geo = state.municipiosGeo.get(cod);
+            if (geo && map) {
+                map.setView([geo.lat, geo.lon], 11, { animate: true });
+            }
+        }
+        
+        // FUNÇÃO PARA CLIQUE NO MAPA (mantém zoom atual)
+        function selecionarLocalMapa(codMun, codLocal, nomeLocal, nomeMun) {
             state.municipioSelecionado = codMun;
             state.localSelecionado = codLocal;
             
@@ -1556,6 +1584,31 @@
                     // MANTER O ZOOM ATUAL
                     const zoomAtual = map.getZoom();
                     map.setView([lat, lon], zoomAtual, { animate: true });
+                }
+            }
+            
+            document.getElementById('buscaLocais').disabled = false;
+            document.getElementById('buscaLocais').value = '';
+            state.buscaLocais = '';
+            atualizarListaLocais(codMun);
+            atualizarEvolucaoLocal(codMun, codLocal);
+            atualizarTituloSelecao();
+            atualizarGraficos();
+            atualizarListaMunicipios();
+        }
+        
+        // FUNÇÃO PARA CLIQUE NA LISTA (zoom 15)
+        function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
+            state.municipioSelecionado = codMun;
+            state.localSelecionado = codLocal;
+            
+            const local = state.locaisGeo.find(l => l.CD_MUNICIPIO === codMun && l.NR_LOCAL_VOTACAO === codLocal);
+            if (local && local.LATITUDE) {
+                const lat = parseFloat(local.LATITUDE);
+                const lon = parseFloat(local.LONGITUDE);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    // ZOOM 15 PARA LISTA
+                    map.setView([lat, lon], 15, { animate: true });
                 }
             }
             
@@ -1709,7 +1762,7 @@
             }
             
             filtrados.sort((a, b) => b.votos - a.votos);
-            // REMOVIDO o map.setView do onclick - agora só chama selecionarLocal
+            // CHAMA selecionarLocal (zoom 15) para lista
             lista.innerHTML = filtrados.slice(0, 8).map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
                     onclick="selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
