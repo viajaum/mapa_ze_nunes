@@ -1028,6 +1028,7 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
+        // Função para atualizar gráfico de barras - COM LABELS REMOVIDOS
         function atualizarGraficoBarras() {
             const canvas = document.getElementById('graficoBarrasDeputados');
             if (!canvas) return;
@@ -1133,9 +1134,7 @@
                         x: {
                             grid: { display: false },
                             ticks: {
-                                maxRotation: 30,
-                                minRotation: 30,
-                                font: { size: 7 }
+                                display: false  // Remove os nomes das barras
                             }
                         }
                     }
@@ -1434,7 +1433,7 @@
                             if (votos > 0) {
                                 selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO);
                             } else {
-                                map.setView([lat, lon], 16);
+                                map.setView([lat, lon], 11);
                             }
                         });
                         
@@ -1497,6 +1496,7 @@
             }, 50);
         }
         
+        // FUNÇÃO MODIFICADA - Agora centraliza o município com zoom 11
         function selecionarMunicipio(cod, nome) {
             state.municipioSelecionado = cod;
             state.localSelecionado = null;
@@ -1508,8 +1508,15 @@
             atualizarTituloSelecao();
             atualizarListaMunicipios();
             atualizarGraficos();
+            
+            // Centralizar no município com zoom 11
+            const geo = state.municipiosGeo.get(cod);
+            if (geo && map) {
+                map.setView([geo.lat, geo.lon], 11, { animate: true });
+            }
         }
         
+        // FUNÇÃO MODIFICADA - Agora centraliza o local com zoom 11 (era 16)
         function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
             state.municipioSelecionado = codMun;
             state.localSelecionado = codLocal;
@@ -1519,7 +1526,8 @@
                 const lat = parseFloat(local.LATITUDE);
                 const lon = parseFloat(local.LONGITUDE);
                 if (!isNaN(lat) && !isNaN(lon)) {
-                    map.setView([lat, lon], 16, { animate: true });
+                    // MUDADO DE 16 PARA 11
+                    map.setView([lat, lon], 11, { animate: true });
                 }
             }
             
@@ -1673,9 +1681,10 @@
             }
             
             filtrados.sort((a, b) => b.votos - a.votos);
+            // REMOVIDO o map.setView do onclick - agora só chama selecionarLocal
             lista.innerHTML = filtrados.slice(0, 8).map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
-                    onclick="map.setView([${l.lat}, ${l.lon}], 16); selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
+                    onclick="selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
                     <span class="item-nome">${l.nome}</span>
                     <span class="item-votos">${l.votos.toLocaleString()}</span>
                 </div>
@@ -1740,10 +1749,6 @@
                 const primeiro = municipiosCache[0];
                 console.log('Selecionando primeiro município:', primeiro.nome);
                 selecionarMunicipio(primeiro.cod, primeiro.nome);
-                
-                if (map) {
-                    map.setView([primeiro.lat, primeiro.lon], 11);
-                }
             } else {
                 alert('Municípios ainda não carregados. Aguarde um momento.');
             }
