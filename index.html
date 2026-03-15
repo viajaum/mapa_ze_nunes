@@ -507,25 +507,6 @@
             font-weight: 600;
         }
         
-        /* Status indicator */
-        .status-indicator {
-            position: fixed;
-            top: 110px;
-            right: 100px;
-            z-index: 40;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(5px);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            border: 1px solid rgba(224,224,224,0.5);
-            color: var(--texto-principal);
-        }
-
-        .status-ok { color: green; font-weight: bold; }
-        .status-warning { color: orange; font-weight: bold; }
-        .status-error { color: red; font-weight: bold; }
-
         /* Estilo personalizado para clusters */
         .custom-cluster {
             background: transparent;
@@ -574,11 +555,6 @@
         <div class="controles-zoom" id="zoomInfo">
             <span id="nivelZoom">7</span> | <span id="camadaAtiva">Municípios</span>
         </div>
-    </div>
-
-    <!-- Status indicator -->
-    <div class="status-indicator" id="statusIndicator">
-        <span>Locais: </span><span id="statusLocais" class="status-warning">⏳ Carregando...</span>
     </div>
     
     <!-- Header -->
