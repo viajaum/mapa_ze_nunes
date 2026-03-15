@@ -1476,38 +1476,68 @@
                 }
             }
             
-            async function processarLocais() {
-                try {
-                    const locaisText = await fetch('locais_votacao_RS_geocodificado.csv').then(r => r.text());
-                    Papa.parse(locaisText, {
-                        header: true,
-                        complete: (results) => {
-                            state.locaisGeo = results.data.filter(l => {
-                                const lat = parseFloat(l.LATITUDE);
-                                const lon = parseFloat(l.LONGITUDE);
-                                return !isNaN(lat) && !isNaN(lon);
-                            });
-                            
-                            results.data.forEach(l => {
-                                if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
-                                    if (!state.locais.has(l.CD_MUNICIPIO)) {
-                                        state.locais.set(l.CD_MUNICIPIO, []);
-                                    }
-                                    state.locais.get(l.CD_MUNICIPIO).push({ 
-                                        codigo: l.NR_LOCAL_VOTACAO, 
-                                        nome: l.NM_LOCAL 
-                                    });
-                                }
-                            });
-                            state.locaisCarregados = true;
-                            console.log('✅ Locais carregados:', state.locaisGeo.length);
-                            if (map) atualizarMapa();
+async function processarLocais() {
+    try {
+        console.log('🟢 Carregando locais de votação...');
+        const locaisText = await fetch(`${BASE_URL}/locais_votacao_RS_geocodificado.csv`).then(r => r.text());
+        
+        Papa.parse(locaisText, {
+            header: true,
+            complete: (results) => {
+                console.log('CSV de locais parseado, linhas:', results.data.length);
+                
+                state.locaisGeo = results.data.filter(l => {
+                    const lat = parseFloat(l.LATITUDE);
+                    const lon = parseFloat(l.LONGITUDE);
+                    return !isNaN(lat) && !isNaN(lon) && l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO;
+                });
+                
+                console.log('Locais com coordenadas válidas:', state.locaisGeo.length);
+                
+                results.data.forEach(l => {
+                    if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
+                        if (!state.locais.has(l.CD_MUNICIPIO)) {
+                            state.locais.set(l.CD_MUNICIPIO, []);
                         }
-                    });
-                } catch (error) {
-                    console.warn('Erro ao carregar locais');
+                        state.locais.get(l.CD_MUNICIPIO).push({ 
+                            codigo: l.NR_LOCAL_VOTACAO, 
+                            nome: l.NM_LOCAL 
+                        });
+                    }
+                });
+                
+                state.locaisCarregados = true;
+                
+                // Estatísticas
+                let totalLocais = 0;
+                state.locais.forEach((locais, mun) => {
+                    totalLocais += locais.length;
+                });
+                console.log('✅ Locais processados:', {
+                    municipiosComLocais: state.locais.size,
+                    totalLocaisCadastrados: totalLocais,
+                    locaisGeorreferenciados: state.locaisGeo.length
+                });
+                
+                atualizarStatusLocais();
+                
+                // ===== CORREÇÃO: Forçar atualização do mapa =====
+                if (map) {
+                    console.log('🔄 Forçando atualização do mapa com locais...');
+                    atualizarMapa();
+                }
+                
+                if (state.municipioSelecionado) {
+                    atualizarListaLocais(state.municipioSelecionado);
                 }
             }
+        });
+    } catch (error) {
+        console.error('❌ Erro ao carregar locais:', error);
+        document.getElementById('statusLocais').className = 'status-error';
+        document.getElementById('statusLocais').textContent = '❌ Erro ao carregar';
+    }
+}
             
             function initMapa() {
                 map = L.map("map").setView([-30.5, -53], 7);
@@ -1577,6 +1607,7 @@
                         console.error(`Erro ao adicionar município ${geo.nome}:`, e);
                     }
                 });
+            }
                 
 // Função de diagnóstico detalhado
 function diagnosticarCompleto() {
@@ -1627,6 +1658,9 @@ function diagnosticarCompleto() {
     console.log('📁 LOCAIS DO CSV:');
     console.log('Total de locais no CSV:', state.locaisGeo.length);
     
+    if (state.locaisCarregados) {
+    console.log('📍 INÍCIO - Adicionando locais ao mapa. Total:', state.locaisGeo.length);
+
     // Agrupa locais do CSV por município
     const locaisPorMunicipio = {};
     state.locaisGeo.forEach(l => {
