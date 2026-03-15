@@ -247,7 +247,7 @@
             flex: 0 0 auto;
             min-height: 0;
             width: 100%;
-            height: 160px; /* Altura reduzida de 200px para 160px */
+            height: 160px;
         }
 
         /* Coluna dos gráficos de pizza */
@@ -1028,6 +1028,15 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
+        // Função para calcular cor entre amarelo e vermelho baseado em um valor (0-1)
+        function getCorAmareloVermelho(valor) {
+            // valor = 0 -> vermelho, valor = 1 -> amarelo
+            const r = 255;
+            const g = Math.round(255 * valor);
+            const b = 0;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
         // Função para atualizar gráfico de barras - COM LABELS REMOVIDOS
         function atualizarGraficoBarras() {
             const canvas = document.getElementById('graficoBarrasDeputados');
@@ -1289,7 +1298,7 @@
             
             camadaMunicipios = L.layerGroup().addTo(map);
             
-            // CLUSTER PERSONALIZADO - CORES ALTERADAS
+            // CLUSTER PERSONALIZADO - Gradiente do amarelo (muitos votos) para vermelho (poucos votos)
             clusterLocais = L.markerClusterGroup({ 
                 maxClusterRadius: 35,
                 iconCreateFunction: function(cluster) {
@@ -1298,25 +1307,40 @@
                     
                     // Calcular média de votos para decidir a cor
                     var totalVotos = 0;
+                    var maxVotos = 0;
+                    
                     markers.forEach(marker => {
-                        if (marker.votos) totalVotos += marker.votos;
+                        if (marker.votos) {
+                            totalVotos += marker.votos;
+                            if (marker.votos > maxVotos) maxVotos = marker.votos;
+                        }
                     });
+                    
                     var mediaVotos = childCount > 0 ? totalVotos / childCount : 0;
                     
-                    var backgroundColor;
+                    // Definir valor para gradiente (0 = vermelho, 1 = amarelo)
+                    // Quanto mais votos, mais próximo do amarelo
+                    var valorGradiente;
                     
-                    // Escolher cor baseado na média de votos
                     if (mediaVotos > 1000) {
-                        backgroundColor = '#8B1E1E'; // Vermelho escuro - muitos votos
+                        valorGradiente = 1.0; // Amarelo
                     } else if (mediaVotos > 500) {
-                        backgroundColor = '#D4A017'; // Dourado - médios votos
-                    } else if (mediaVotos > 100) {
-                        backgroundColor = '#2E8B57'; // Verde - poucos votos
+                        valorGradiente = 0.8; // Laranja claro
+                    } else if (mediaVotos > 200) {
+                        valorGradiente = 0.6; // Laranja
+                    } else if (mediaVotos > 50) {
+                        valorGradiente = 0.4; // Laranja escuro
                     } else if (mediaVotos > 0) {
-                        backgroundColor = '#4682B4'; // Azul - muito poucos votos
+                        valorGradiente = 0.2; // Vermelho claro
                     } else {
-                        backgroundColor = '#808080'; // Cinza - sem votos
+                        valorGradiente = 0.0; // Vermelho (sem votos)
                     }
+                    
+                    // Calcular cor RGB: de vermelho (255,0,0) a amarelo (255,255,0)
+                    var r = 255;
+                    var g = Math.round(255 * valorGradiente);
+                    var b = 0;
+                    var backgroundColor = `rgb(${r}, ${g}, ${b})`;
                     
                     // Criar HTML com estilo personalizado
                     var html = '<div style="' +
@@ -1433,7 +1457,9 @@
                             if (votos > 0) {
                                 selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO);
                             } else {
-                                map.setView([lat, lon], 11);
+                                // Para locais sem votos, centraliza mantendo o zoom atual
+                                const zoomAtual = map.getZoom();
+                                map.setView([lat, lon], zoomAtual, { animate: true });
                             }
                         });
                         
@@ -1496,7 +1522,7 @@
             }, 50);
         }
         
-        // FUNÇÃO MODIFICADA - Agora centraliza o município com zoom 11
+        // FUNÇÃO MODIFICADA - Centraliza mantendo o zoom atual
         function selecionarMunicipio(cod, nome) {
             state.municipioSelecionado = cod;
             state.localSelecionado = null;
@@ -1509,14 +1535,15 @@
             atualizarListaMunicipios();
             atualizarGraficos();
             
-            // Centralizar no município com zoom 11
+            // Centralizar no município MANTENDO O ZOOM ATUAL
             const geo = state.municipiosGeo.get(cod);
             if (geo && map) {
-                map.setView([geo.lat, geo.lon], 11, { animate: true });
+                const zoomAtual = map.getZoom();
+                map.setView([geo.lat, geo.lon], zoomAtual, { animate: true });
             }
         }
         
-        // FUNÇÃO MODIFICADA - Agora centraliza o local com zoom 11 (era 16)
+        // FUNÇÃO MODIFICADA - Centraliza mantendo o zoom atual
         function selecionarLocal(codMun, codLocal, nomeLocal, nomeMun) {
             state.municipioSelecionado = codMun;
             state.localSelecionado = codLocal;
@@ -1526,8 +1553,9 @@
                 const lat = parseFloat(local.LATITUDE);
                 const lon = parseFloat(local.LONGITUDE);
                 if (!isNaN(lat) && !isNaN(lon)) {
-                    // MUDADO DE 16 PARA 11
-                    map.setView([lat, lon], 11, { animate: true });
+                    // MANTER O ZOOM ATUAL
+                    const zoomAtual = map.getZoom();
+                    map.setView([lat, lon], zoomAtual, { animate: true });
                 }
             }
             
