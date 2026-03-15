@@ -665,6 +665,12 @@
                 </div>
             </div>
         </div>
+        <!-- Adicione dentro da coluna direita, junto com os outros botões -->
+<div class="botoes-teste" style="margin-top: 5px;">
+    <button class="btn-teste" onclick="diagnosticarCompleto()" style="background: #4CAF50;">
+        🔍 Diagnóstico Completo
+    </button>
+</div>
     </div>
                 
     <script>
@@ -1572,41 +1578,105 @@
                     }
                 });
                 
-                // LOCAIS - CORRIGIDO PARA ACESSAR VALORES DIRETOS
-                if (state.locaisCarregados) {
-                    state.locaisGeo.forEach(l => {
-                        try {
-                            const lat = parseFloat(l.LATITUDE);
-                            const lon = parseFloat(l.LONGITUDE);
-                            
-                            if (isNaN(lat) || isNaN(lon)) return;
-                            
-                            // CORREÇÃO: Acesso direto ao valor, não .votos
-                            let votos = 0;
-                            if (state.candidato.anos[state.ano]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO] !== undefined) {
-                                votos = state.candidato.anos[state.ano].municipios[l.CD_MUNICIPIO].locais[l.NR_LOCAL_VOTACAO];
-                            }
-                            
-                            if (votos > 0) {
-                                let votosAnt = 0;
-                                if (anoAnterior && state.candidato.anos[anoAnterior]?.municipios[l.CD_MUNICIPIO]?.locais?.[l.NR_LOCAL_VOTACAO] !== undefined) {
-                                    votosAnt = state.candidato.anos[anoAnterior].municipios[l.CD_MUNICIPIO].locais[l.NR_LOCAL_VOTACAO];
-                                }
-                                
-                                L.circleMarker([lat, lon], {
-                                    radius: getTamanhoCirculo(votos, 'local'),
-                                    color: '#333', weight: 1,
-                                    fillColor: getCorPorEvolucao(votos, votosAnt, state.ano),
-                                    fillOpacity: 0.7
-                                }).addTo(clusterLocais)
-                                .bindPopup(`<b>${l.NM_LOCAL}</b><br>${l.NM_MUNICIPIO}<br>${state.ano}: ${votos.toLocaleString()}`)
-                                .on('click', () => selecionarLocal(l.CD_MUNICIPIO, l.NR_LOCAL_VOTACAO, l.NM_LOCAL, l.NM_MUNICIPIO));
-                            }
-                        } catch (e) {
-                            console.error('Erro ao adicionar local:', e);
-                        }
-                    });
-                }
+// Função de diagnóstico detalhado
+function diagnosticarCompleto() {
+    console.log('=== DIAGNÓSTICO COMPLETO ===');
+    
+    if (!state.candidato) {
+        console.log('❌ candidato não carregado');
+        return;
+    }
+    
+    console.log('📊 ANO ATUAL:', state.ano);
+    console.log('📊 MUNICÍPIO SELECIONADO:', state.municipioSelecionado);
+    
+    // Verifica a estrutura do candidato
+    console.log('📁 ESTRUTURA DO CANDIDATO:');
+    console.log('Anos disponíveis:', Object.keys(state.candidato.anos));
+    
+    const dadosAno = state.candidato.anos[state.ano];
+    if (!dadosAno) {
+        console.log('❌ Sem dados para o ano', state.ano);
+        return;
+    }
+    
+    console.log('Municípios no ano:', dadosAno.municipios ? Object.keys(dadosAno.municipios).length : 0);
+    
+    // Mostra os primeiros 5 municípios
+    if (dadosAno.municipios) {
+        const municipiosLista = Object.keys(dadosAno.municipios).slice(0, 5);
+        console.log('Primeiros 5 municípios:', municipiosLista);
+        
+        // Para cada município, mostra quantos locais
+        municipiosLista.forEach(codMun => {
+            const municipio = dadosAno.municipios[codMun];
+            const qtdLocais = municipio.locais ? Object.keys(municipio.locais).length : 0;
+            console.log(`  🏛️ Município ${codMun}: ${qtdLocais} locais, total votos: ${municipio.votos || 0}`);
+            
+            // Mostra primeiros locais deste município
+            if (qtdLocais > 0) {
+                const primeirosLocais = Object.keys(municipio.locais).slice(0, 3);
+                primeirosLocais.forEach(localId => {
+                    console.log(`    📍 Local ${localId}: ${municipio.locais[localId]} votos`);
+                });
+            }
+        });
+    }
+    
+    // Verifica os locais do CSV
+    console.log('📁 LOCAIS DO CSV:');
+    console.log('Total de locais no CSV:', state.locaisGeo.length);
+    
+    // Agrupa locais do CSV por município
+    const locaisPorMunicipio = {};
+    state.locaisGeo.forEach(l => {
+        if (!locaisPorMunicipio[l.CD_MUNICIPIO]) {
+            locaisPorMunicipio[l.CD_MUNICIPIO] = [];
+        }
+        locaisPorMunicipio[l.CD_MUNICIPIO].push(l);
+    });
+    
+    console.log('Municípios com locais no CSV:', Object.keys(locaisPorMunicipio).length);
+    
+    // Mostra os primeiros 5 municípios do CSV
+    const munCSV = Object.keys(locaisPorMunicipio).slice(0, 5);
+    munCSV.forEach(codMun => {
+        console.log(`  🗺️ Município CSV ${codMun}: ${locaisPorMunicipio[codMun].length} locais`);
+        
+        // Verifica se este município existe nos dados do candidato
+        const existeNosDados = dadosAno.municipios && dadosAno.municipios[codMun];
+        console.log(`    Existe nos dados: ${existeNosDados ? 'sim' : 'não'}`);
+        
+        if (existeNosDados) {
+            // Verifica os primeiros locais deste município
+            const primeirosLocaisCSV = locaisPorMunicipio[codMun].slice(0, 3);
+            primeirosLocaisCSV.forEach(l => {
+                const votos = dadosAno.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO] || 0;
+                console.log(`    📍 Local ${l.NR_LOCAL_VOTACAO} (${l.NM_LOCAL}): votos=${votos}`);
+            });
+        }
+    });
+    
+    // Verifica um local específico se houver município selecionado
+    if (state.municipioSelecionado) {
+        console.log('🎯 MUNICÍPIO SELECIONADO:', state.municipioSelecionado);
+        
+        const municipioDados = dadosAno.municipios?.[state.municipioSelecionado];
+        if (municipioDados) {
+            console.log('Dados do município:', {
+                votos: municipioDados.votos,
+                locais: municipioDados.locais ? Object.keys(municipioDados.locais).length : 0
+            });
+        } else {
+            console.log('❌ Município não encontrado nos dados');
+        }
+        
+        const locaisDoMun = state.locais.get(state.municipioSelecionado);
+        if (locaisDoMun) {
+            console.log('Locais do CSV neste município:', locaisDoMun.length);
+        }
+    }
+}
                 
                 map.fire('zoomend');
             }
