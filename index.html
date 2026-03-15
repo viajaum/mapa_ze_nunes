@@ -507,45 +507,6 @@
             font-weight: 600;
         }
         
-        /* Botões de teste */
-        .botoes-teste {
-            display: flex;
-            gap: 5px;
-            padding: 5px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(5px);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.4);
-            pointer-events: auto;
-            margin-top: 5px;
-        }
-
-        .btn-teste {
-            flex: 1;
-            background: var(--vermelho-principal);
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-teste:hover {
-            background: #a52a2a;
-            transform: translateY(-2px);
-        }
-
-        .btn-teste.secondary {
-            background: var(--dourado-principal);
-        }
-
-        .btn-teste.secondary:hover {
-            background: #e6b422;
-        }
-
         /* Status indicator */
         .status-indicator {
             position: fixed;
@@ -715,19 +676,6 @@
         
         <!-- Coluna Direita -->
         <div class="coluna-direita">
-            <!-- Botões de teste -->
-            <div class="botoes-teste">
-                <button class="btn-teste" onclick="selecionarPrimeiroMunicipio()">
-                    🏛️ 1º Município
-                </button>
-                <button class="btn-teste secondary" onclick="diagnosticarCompleto()">
-                    🔍 Diagnóstico
-                </button>
-                <button class="btn-teste" onclick="forcarZoomLocais()">
-                    🔎 Zoom Locais
-                </button>
-            </div>
-
             <!-- Slider -->
             <div class="slider-container">
                 <div class="slider-label">
@@ -1824,17 +1772,7 @@
             atualizarGraficoBarras();
         }
 
-        // Funções auxiliares para os botões de teste
-        function selecionarPrimeiroMunicipio() {
-            if (municipiosCache.length > 0) {
-                const primeiro = municipiosCache[0];
-                console.log('Selecionando primeiro município:', primeiro.nome);
-                selecionarMunicipio(primeiro.cod, primeiro.nome);
-            } else {
-                alert('Municípios ainda não carregados. Aguarde um momento.');
-            }
-        }
-
+        // Função auxiliar para o botão de zoom (opcional, mas mantida caso queira usar)
         function forcarZoomLocais() {
             if (map) {
                 const zoom = map.getZoom();
