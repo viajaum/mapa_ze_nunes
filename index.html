@@ -311,17 +311,16 @@
             min-height: 0;
         }
 
-        /* Coluna direita */
+        /* Coluna direita - mais flexível */
         .coluna-direita {
-            flex: 1;
-            min-width: 300px;
+            flex: 1.2;
+            min-width: 320px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             pointer-events: none;
             align-self: flex-end;
-            height: auto;
-            max-height: calc(100vh - 130px);
+            height: calc(100vh - 130px);
             margin-bottom: 20px;
             justify-content: flex-end;
         }
@@ -349,7 +348,7 @@
             font-size: 0.9em;
         }
 
-        /* Slider */
+        /* Slider - altura fixa */
         .slider-container {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(5px);
@@ -358,6 +357,7 @@
             border: 1px solid rgba(255,255,255,0.4);
             pointer-events: auto;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            flex-shrink: 0;
         }
         
         .slider-label {
@@ -420,22 +420,26 @@
             margin-top: 2px;
         }
         
-        /* Listas */
+        /* Listas container - agora ocupa todo o espaço disponível */
         .listas-container {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 8px;
             min-height: 0;
+            height: 100%;
         }
 
+        /* Cada componente de lista */
         .lista-component {
             flex: 1;
             display: flex;
             flex-direction: column;
             min-height: 0;
+            height: 50%;
         }
 
+        /* A lista em si (a parte rolável) */
         .lista {
             flex: 1;
             overflow-y: auto;
@@ -444,7 +448,7 @@
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(5px);
             font-size: 0.9em;
-            max-height: 100%;
+            min-height: 0;
         }
         
         /* Legenda do mapa */
@@ -480,6 +484,7 @@
         
         .search-box {
             margin-bottom: 4px;
+            flex-shrink: 0;
         }
         
         .search-box input {
@@ -501,6 +506,7 @@
             border-bottom: 1px solid rgba(224,224,224,0.5);
             cursor: pointer;
             font-size: 0.9em;
+            transition: background-color 0.2s;
         }
         
         .item-lista:hover {
@@ -519,6 +525,22 @@
             border-radius: 10px;
             font-size: 0.8em;
             font-weight: 600;
+            white-space: nowrap;
+            margin-left: 5px;
+        }
+
+        .item-nome {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .mensagem-ajuda {
+            padding: 20px;
+            text-align: center;
+            color: var(--texto-secundario);
+            font-style: italic;
         }
         
         /* Estilo personalizado para clusters */
@@ -724,9 +746,9 @@
             configCandidatos: null,
             top10Deputados: null,
             candidatosDeputados: null,
-            municipios: new Map(),        // Lista completa de municípios
+            municipios: new Map(),
             locais: new Map(),
-            municipiosGeo: new Map(),     // Municípios com coordenadas para o mapa
+            municipiosGeo: new Map(),
             locaisGeo: [],
             ano: '2022',
             municipioSelecionado: null,
@@ -1107,6 +1129,12 @@
                 atualizarListaMunicipios();
                 if (state.municipioSelecionado) {
                     atualizarListaLocais(state.municipioSelecionado);
+                } else {
+                    // Limpar lista de locais quando nenhum município selecionado
+                    const lista = document.getElementById('listaLocais');
+                    if (lista) {
+                        lista.innerHTML = '<div class="mensagem-ajuda">Selecione um município</div>';
+                    }
                 }
             } catch (e) { console.error('Erro ao atualizar listas:', e); }
         }
@@ -1620,7 +1648,13 @@
             document.getElementById('buscaLocais').value = '';
             state.buscaLocais = '';
             atualizarEvolucao();
-            atualizarListaLocais(null);
+            
+            // Limpar lista de locais
+            const lista = document.getElementById('listaLocais');
+            if (lista) {
+                lista.innerHTML = '<div class="mensagem-ajuda">Selecione um município</div>';
+            }
+            
             atualizarListaMunicipios();
             atualizarGraficos();
             atualizarTituloSelecao();
@@ -1742,17 +1776,24 @@
                 });
             });
             
+            // Ordenar por votos (maiores primeiro)
+            locais.sort((a, b) => b.votos - a.votos);
+            
             if (locais.length === 0) {
-                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local encontrado</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local de votação encontrado neste município</div>';
                 return;
             }
             
+            // Filtrar por busca se houver
             let filtrados = locais;
             if (state.buscaLocais) {
                 filtrados = locais.filter(l => l.nome.toLowerCase().includes(state.buscaLocais.toLowerCase()));
             }
             
-            filtrados.sort((a, b) => b.votos - a.votos);
+            if (filtrados.length === 0) {
+                lista.innerHTML = `<div class="mensagem-ajuda">Nenhum local encontrado para "${state.buscaLocais}"</div>`;
+                return;
+            }
             
             lista.innerHTML = filtrados.map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
@@ -1810,7 +1851,9 @@
             });
             
             atualizarListaMunicipios();
-            if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
+            if (state.municipioSelecionado) {
+                atualizarListaLocais(state.municipioSelecionado);
+            }
             
             atualizarGraficoBarras();
         }
@@ -1852,7 +1895,9 @@
         
         document.getElementById('buscaLocais').addEventListener('input', e => {
             state.buscaLocais = e.target.value;
-            if (state.municipioSelecionado) atualizarListaLocais(state.municipioSelecionado);
+            if (state.municipioSelecionado) {
+                atualizarListaLocais(state.municipioSelecionado);
+            }
         });
         
         function garantirSliderEm2022() {
