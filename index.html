@@ -1639,15 +1639,14 @@
             municipiosCache = [];
             state.municipiosGeo.forEach((geo, cod) => {
                 const votos = state.candidato.anos[state.ano]?.municipios[cod]?.votos || 0;
-                if (votos > 0) {
-                    municipiosCache.push({ 
-                        cod, 
-                        nome: geo.nome, 
-                        votos, 
-                        lat: geo.lat, 
-                        lon: geo.lon 
-                    });
-                }
+                // REMOVI O FILTRO DE votos > 0 - agora mostra todos os municípios
+                municipiosCache.push({ 
+                    cod, 
+                    nome: geo.nome, 
+                    votos, 
+                    lat: geo.lat, 
+                    lon: geo.lon 
+                });
             });
             
             let filtrados = municipiosCache;
@@ -1662,7 +1661,7 @@
                 return;
             }
             
-            // MOSTRAR TODOS OS MUNICÍPIOS (sem limite)
+            // Mostrar todos os municípios
             lista.innerHTML = filtrados.map(m => `
                 <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
                     onclick="selecionarMunicipio('${m.cod}', '${m.nome}')">
@@ -1685,19 +1684,18 @@
             state.locaisGeo.forEach(l => {
                 if (l.CD_MUNICIPIO !== codMun) return;
                 const votos = state.candidato?.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO] || 0;
-                if (votos > 0) {
-                    locais.push({
-                        cod: l.NR_LOCAL_VOTACAO,
-                        nome: l.NM_LOCAL,
-                        votos,
-                        lat: parseFloat(l.LATITUDE),
-                        lon: parseFloat(l.LONGITUDE)
-                    });
-                }
+                // REMOVI O FILTRO DE votos > 0 - agora mostra todos os locais
+                locais.push({
+                    cod: l.NR_LOCAL_VOTACAO,
+                    nome: l.NM_LOCAL,
+                    votos,
+                    lat: parseFloat(l.LATITUDE),
+                    lon: parseFloat(l.LONGITUDE)
+                });
             });
             
             if (locais.length === 0) {
-                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local com votos</div>';
+                lista.innerHTML = '<div class="mensagem-ajuda">Nenhum local encontrado</div>';
                 return;
             }
             
@@ -1708,7 +1706,7 @@
             
             filtrados.sort((a, b) => b.votos - a.votos);
             
-            // MOSTRAR TODOS OS LOCAIS (sem limite)
+            // Mostrar todos os locais
             lista.innerHTML = filtrados.map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
                     onclick="selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
