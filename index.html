@@ -1379,7 +1379,7 @@
                 const zoom = map.getZoom();
                 document.getElementById('nivelZoom').textContent = zoom;
                 
-                if (zoom >= 11) {
+                if (zoom >= 10) {
                     if (map.hasLayer(camadaMunicipios)) {
                         map.removeLayer(camadaMunicipios);
                     }
