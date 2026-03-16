@@ -1662,7 +1662,8 @@
                 return;
             }
             
-            lista.innerHTML = filtrados.slice(0, 15).map(m => `
+            // MOSTRAR TODOS OS MUNICÍPIOS (sem limite)
+            lista.innerHTML = filtrados.map(m => `
                 <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
                     onclick="selecionarMunicipio('${m.cod}', '${m.nome}')">
                     <span class="item-nome">${m.nome}</span>
@@ -1707,7 +1708,8 @@
             
             filtrados.sort((a, b) => b.votos - a.votos);
             
-            lista.innerHTML = filtrados.slice(0, 8).map(l => `
+            // MOSTRAR TODOS OS LOCAIS (sem limite)
+            lista.innerHTML = filtrados.map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
                     onclick="selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
                     <span class="item-nome">${l.nome}</span>
