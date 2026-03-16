@@ -1479,7 +1479,7 @@
                 });
                 
                 // ADICIONAR MUNICÍPIOS SEM LOCAIS À CAMADA DE LOCAIS
-                if (zoom >= 11) {
+                if (zoom >= 9) {
                     state.municipiosGeo.forEach((geo, cod) => {
                         try {
                             if (!municipiosComLocais.has(cod)) {
