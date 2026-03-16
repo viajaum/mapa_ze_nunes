@@ -17,11 +17,11 @@
         "numero": "13713",
         "partido": "PT",
         "nome_exibicao": "VALDECI OLIVEIRA",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "ARLEU MACHADO DE OLIVEIRA": {
         "numero": "11234",
-        "partido": null,
+        "partido": "PP",
         "nome_exibicao": "ARLEU MACHADO DE OLIVEIRA",
         "cor": "#888888"
       },
@@ -39,9 +39,9 @@
       },
       "CAROLINA FIGUEREDO MACIEL": {
         "numero": "13888",
-        "partido": null,
-        "nome_exibicao": "CAROLINA FIGUEREDO MACIEL",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "CAROLINA MACIEL",
+        "cor": "#F00501"
       },
       "CIRO CARLOS EMERIM SIMONI": {
         "numero": "12233",
@@ -51,9 +51,9 @@
       },
       "DENIS REMI CARDOSO SILVEIRA": {
         "numero": "13600",
-        "partido": null,
-        "nome_exibicao": "DENIS REMI CARDOSO SILVEIRA",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "DENIS REMI",
+        "cor": "#F00501"
       },
       "EDSON MEURER BRUM": {
         "numero": "15200",
@@ -99,9 +99,9 @@
       },
       "JOAO EDEGAR PRETTO": {
         "numero": "13655",
-        "partido": null,
-        "nome_exibicao": "JOAO EDEGAR PRETTO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "EDEGAR PRETTO",
+        "cor": "#F00501"
       },
       "JULIANA BRIZOLA": {
         "numero": "12001",
@@ -123,9 +123,9 @@
       },
       "LELIO NUNES LOPES FILHO": {
         "numero": "13800",
-        "partido": null,
-        "nome_exibicao": "LELIO NUNES LOPES FILHO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "LELINHO LOPES",
+        "cor": "#F00501"
       },
       "LUCAS BELLO REDECKER": {
         "numero": "45111",
@@ -135,9 +135,9 @@
       },
       "LUIZ FERNANDO MAINARDI": {
         "numero": "13555",
-        "partido": null,
-        "nome_exibicao": "LUIZ FERNANDO MAINARDI",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "MAINARDI",
+        "cor": "#F00501"
       },
       "LUÍS AUGUSTO BARCELLOS LARA": {
         "numero": "14789",
@@ -153,9 +153,9 @@
       },
       "MARCIO ADRIANO CANTELLI ESPINDOLA": {
         "numero": "13077",
-        "partido": null,
-        "nome_exibicao": "MARCIO ADRIANO CANTELLI ESPINDOLA",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "MARCIO ESPINDOLA",
+        "cor": "#F00501"
       },
       "MARLON ARATOR SANTOS DA ROSA": {
         "numero": "12512",
@@ -171,9 +171,9 @@
       },
       "MIRIAM PAZ GARCEZ MARRONI": {
         "numero": "13631",
-        "partido": null,
-        "nome_exibicao": "MIRIAM PAZ GARCEZ MARRONI",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "MIRIAM MARRONI",
+        "cor": "#F00501"
       },
       "PEDRO BANDARRA WESTPHALEN": {
         "numero": "11233",
@@ -231,15 +231,15 @@
       },
       "Partido dos Trabalhadores": {
         "numero": "13",
-        "partido": null,
+        "partido": "PT",
         "nome_exibicao": "Partido dos Trabalhadores",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "REGINETE SOUZA BISPO": {
         "numero": "13477",
-        "partido": null,
-        "nome_exibicao": "REGINETE SOUZA BISPO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "REGINETE BISPO",
+        "cor": "#F00501"
       },
       "ROBERTO CESAR PIRES CAMARGO": {
         "numero": "15015",
@@ -267,9 +267,9 @@
       },
       "SOFIA CAVEDON NUNES": {
         "numero": "13400",
-        "partido": null,
-        "nome_exibicao": "SOFIA CAVEDON NUNES",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "SOFIA CAVEDON",
+        "cor": "#F00501"
       },
       "Solidariedade": {
         "numero": "77",
@@ -411,9 +411,9 @@
       },
       "STELA BEATRIZ FARIAS LOPES": {
         "numero": "13113",
-        "partido": null,
-        "nome_exibicao": "STELA BEATRIZ FARIAS LOPES",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "STELA FARIAS",
+        "cor": "#F00501"
       },
       "VOLNEI DA SILVA ALVES": {
         "numero": "22222",
@@ -447,9 +447,9 @@
       },
       "ANA INES AFFONSO": {
         "numero": "13813",
-        "partido": null,
-        "nome_exibicao": "ANA INES AFFONSO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "ANA AFFONSO",
+        "cor": "#F00501"
       },
       "AURÉLIO INACIO SCHMIDT": {
         "numero": "45000",
@@ -681,9 +681,9 @@
       },
       "LUIS ALBERTO FERREIRA DIAZ": {
         "numero": "13877",
-        "partido": null,
-        "nome_exibicao": "LUIS ALBERTO FERREIRA DIAZ",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "LUIS ALBERTO DIAZ",
+        "cor": "#F00501"
       },
       "Partido Republicano Brasileiro": {
         "numero": "10",
@@ -699,9 +699,9 @@
       },
       "ADÃO ROBERTO RODRIGUES VILLAVERDE": {
         "numero": "13013",
-        "partido": null,
-        "nome_exibicao": "ADÃO ROBERTO RODRIGUES VILLAVERDE",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "ADÃO VILLAVERDE",
+        "cor": "#F00501"
       },
       "CARLOS ANTONIO DA SILVA": {
         "numero": "45445",
@@ -741,9 +741,9 @@
       },
       "LUIS ROGERIO LINK": {
         "numero": "13130",
-        "partido": null,
+        "partido": "PT",
         "nome_exibicao": "LUIS ROGERIO LINK",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "Partido Republicano Progressista": {
         "numero": "44",
@@ -813,9 +813,9 @@
       },
       "LUIZ FRANCISCO SPOTORNO": {
         "numero": "13132",
-        "partido": null,
-        "nome_exibicao": "LUIZ FRANCISCO SPOTORNO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "SPOTORNO",
+        "cor": "#F00501"
       },
       "ADOLFO JOSÉ BRITO": {
         "numero": "11240",
@@ -843,9 +843,9 @@
       },
       "LUIZ FERNANDO VARGAS DE MENEZES": {
         "numero": "13070",
-        "partido": null,
-        "nome_exibicao": "LUIZ FERNANDO VARGAS DE MENEZES",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "FERNANDO MENEZES",
+        "cor": "#F00501"
       },
       "MARCELO PIRES MORAES": {
         "numero": "14114",
@@ -855,9 +855,9 @@
       },
       "NELSON LUIZ DA SILVA": {
         "numero": "13630",
-        "partido": null,
-        "nome_exibicao": "NELSON LUIZ DA SILVA",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "NELSINHO METALURGICO",
+        "cor": "#F00501"
       },
       "Partido Trabalhista Cristão": {
         "numero": "36",
@@ -867,9 +867,9 @@
       },
       "VILSON ROBERTO BASTOS DOS SANTOS": {
         "numero": "13513",
-        "partido": null,
-        "nome_exibicao": "VILSON ROBERTO BASTOS DOS SANTOS",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "VILSON ROBERTO DOS SANTOS",
+        "cor": "#F00501"
       },
       "CRISTIAN ALEXANDRE STRACK": {
         "numero": "10411",
@@ -933,9 +933,9 @@
       },
       "HELEN MARTINS CABRAL": {
         "numero": "13307",
-        "partido": null,
-        "nome_exibicao": "HELEN MARTINS CABRAL",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "HELEN CABRAL",
+        "cor": "#F00501"
       },
       "JAIR ROBERTO JASPER": {
         "numero": "40125",
@@ -945,9 +945,9 @@
       },
       "LORENI DA SILVA MACIEL": {
         "numero": "13614",
-        "partido": null,
-        "nome_exibicao": "LORENI DA SILVA MACIEL",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "LORENI MACIEL",
+        "cor": "#F00501"
       },
       "MARCEL VAN HATTEM": {
         "numero": "11022",
@@ -987,15 +987,15 @@
       },
       "AURIO PAULO SCHERER": {
         "numero": "13690",
-        "partido": null,
+        "partido": "PT",
         "nome_exibicao": "AURIO PAULO SCHERER",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "GIOVANE WICKERT": {
         "numero": "13213",
-        "partido": null,
+        "partido": "PT",
         "nome_exibicao": "GIOVANE WICKERT",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "LEONIR CARDOZO": {
         "numero": "11311",
@@ -1011,9 +1011,9 @@
       },
       "CRISTIANO RODRIGUES AQUINO": {
         "numero": "13607",
-        "partido": null,
-        "nome_exibicao": "CRISTIANO RODRIGUES AQUINO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "CRISTIANO AQUINO",
+        "cor": "#F00501"
       },
       "FERNANDA MELCHIONNA E SILVA": {
         "numero": "50500",
@@ -1077,9 +1077,9 @@
       },
       "EDUARDO SOARES DA ROSA": {
         "numero": "13051",
-        "partido": null,
-        "nome_exibicao": "EDUARDO SOARES DA ROSA",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "EDUARDO DA ROSA",
+        "cor": "#F00501"
       },
       "FLAVIO LUIZ LAMMEL": {
         "numero": "12125",
@@ -1101,9 +1101,9 @@
       },
       "RENE LUIZ CECCONELLO": {
         "numero": "13001",
-        "partido": null,
-        "nome_exibicao": "RENE LUIZ CECCONELLO",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "RENE CECCONELLO",
+        "cor": "#F00501"
       },
       "VERA JUSTINA GUASSO": {
         "numero": "16123",
@@ -1167,9 +1167,9 @@
       },
       "JOSE CLEMENTE DA SILVA CORREA": {
         "numero": "13190",
-        "partido": null,
-        "nome_exibicao": "JOSE CLEMENTE DA SILVA CORREA",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "JOSE CLEMENTE",
+        "cor": "#F00501"
       },
       "LUCIANO LEAL NÁGERA": {
         "numero": "14129",
@@ -1233,9 +1233,9 @@
       },
       "ALTEMIR ANTONIO TORTELLI": {
         "numero": "13030",
-        "partido": null,
-        "nome_exibicao": "ALTEMIR ANTONIO TORTELLI",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "ALTEMIR TORTELLI",
+        "cor": "#F00501"
       },
       "DIEISON JOCEMAR ENGROFF": {
         "numero": "40100",
@@ -1257,9 +1257,9 @@
       },
       "ARI THESSING": {
         "numero": "13510",
-        "partido": null,
+        "partido": "PT",
         "nome_exibicao": "ARI THESSING",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "DARIO FRANCISCO DA SILVEIRA": {
         "numero": "12500",
@@ -1287,15 +1287,15 @@
       },
       "RICARDO HOWES CARPES": {
         "numero": "13131",
-        "partido": null,
-        "nome_exibicao": "RICARDO HOWES CARPES",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "RICARDO CARPES",
+        "cor": "#F00501"
       },
       "TÂMARA JOANA BIOLO SOARES": {
         "numero": "13773",
-        "partido": null,
-        "nome_exibicao": "TÂMARA JOANA BIOLO SOARES",
-        "cor": "#888888"
+        "partido": "PT",
+        "nome_exibicao": "TÂMARA BIOLO",
+        "cor": "#F00501"
       },
       "VALDOMIRO SIPP": {
         "numero": "45440",
@@ -1413,9 +1413,9 @@
       },
       "NELSON SPOLAOR": {
         "numero": "13000",
-        "partido": null,
+        "partido": "PT",
         "nome_exibicao": "NELSON SPOLAOR",
-        "cor": "#888888"
+        "cor": "#F00501"
       },
       "PERCI PEREIRA": {
         "numero": "17612",
