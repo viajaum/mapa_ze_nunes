@@ -711,9 +711,9 @@
             configCandidatos: null,
             top10Deputados: null,
             candidatosDeputados: null,
-            municipios: new Map(),        // Lista completa de municípios (do municipios.csv)
+            municipios: new Map(),
             locais: new Map(),
-            municipiosGeo: new Map(),     // Municípios com coordenadas (do municipios_RS_geocodificado.csv)
+            municipiosGeo: new Map(),
             locaisGeo: [],
             ano: '2022',
             municipioSelecionado: null,
@@ -1131,42 +1131,49 @@
                     complete: (results) => {
                         results.data.forEach(m => {
                             if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
-                                // Guardar no Map principal para a lista
                                 state.municipios.set(m.CD_MUNICIPIO, m.NM_MUNICIPIO);
                             }
                         });
                         console.log('✅ Municípios (lista completa) carregados:', state.municipios.size);
                         
-                        // CARREGAR MUNICÍPIOS GEOCODIFICADOS (para o mapa)
-                        const municipiosGeoText = await fetch(`${BASE_URL}/municipios_RS_geocodificado.csv`).then(r => r.text());
-                        Papa.parse(municipiosGeoText, {
-                            header: true,
-                            complete: (results2) => {
-                                results2.data.forEach(m => {
-                                    if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
-                                        const lat = parseFloat(m.LATITUDE);
-                                        const lon = parseFloat(m.LONGITUDE);
+                        // CARREGAR MUNICÍPIOS GEOCODIFICADOS
+                        fetch(`${BASE_URL}/municipios_RS_geocodificado.csv`)
+                            .then(r => r.text())
+                            .then(municipiosGeoText => {
+                                Papa.parse(municipiosGeoText, {
+                                    header: true,
+                                    complete: (results2) => {
+                                        results2.data.forEach(m => {
+                                            if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
+                                                const lat = parseFloat(m.LATITUDE);
+                                                const lon = parseFloat(m.LONGITUDE);
+                                                
+                                                if (!isNaN(lat) && !isNaN(lon)) {
+                                                    state.municipiosGeo.set(m.CD_MUNICIPIO, {
+                                                        nome: m.NM_MUNICIPIO,
+                                                        lat: lat,
+                                                        lon: lon
+                                                    });
+                                                }
+                                            }
+                                        });
+                                        console.log('✅ Municípios geocodificados carregados:', state.municipiosGeo.size);
                                         
-                                        if (!isNaN(lat) && !isNaN(lon)) {
-                                            state.municipiosGeo.set(m.CD_MUNICIPIO, {
-                                                nome: m.NM_MUNICIPIO,
-                                                lat: lat,
-                                                lon: lon
+                                        // Agora carregar locais
+                                        fetch(`${BASE_URL}/locais_votacao_RS_geocodificado.csv`)
+                                            .then(r => r.text())
+                                            .then(locaisText => {
+                                                processarLocais(locaisText);
+                                                initMapa();
+                                                
+                                                setTimeout(() => {
+                                                    atualizarListaMunicipios();
+                                                    selecionarEstadoInicial();
+                                                }, 100);
                                             });
-                                        }
                                     }
                                 });
-                                console.log('✅ Municípios geocodificados carregados:', state.municipiosGeo.size);
-                                
-                                processarLocais();
-                                initMapa();
-                                
-                                setTimeout(() => {
-                                    atualizarListaMunicipios();
-                                    selecionarEstadoInicial();
-                                }, 100);
-                            }
-                        });
+                            });
                     }
                 });
             } catch (error) {
@@ -1174,61 +1181,54 @@
             }
         }
         
-        async function processarLocais() {
-            try {
-                console.log('🟢 Carregando locais de votação...');
-                const locaisText = await fetch(`${BASE_URL}/locais_votacao_RS_geocodificado.csv`).then(r => r.text());
-                
-                Papa.parse(locaisText, {
-                    header: true,
-                    complete: (results) => {
-                        console.log('CSV de locais parseado, linhas:', results.data.length);
-                        
-                        state.locaisGeo = results.data.filter(l => {
-                            const lat = parseFloat(l.LATITUDE);
-                            const lon = parseFloat(l.LONGITUDE);
-                            return !isNaN(lat) && !isNaN(lon) && l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO;
-                        });
-                        
-                        console.log('Locais com coordenadas válidas:', state.locaisGeo.length);
-                        
-                        results.data.forEach(l => {
-                            if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
-                                if (!state.locais.has(l.CD_MUNICIPIO)) {
-                                    state.locais.set(l.CD_MUNICIPIO, []);
-                                }
-                                state.locais.get(l.CD_MUNICIPIO).push({ 
-                                    codigo: l.NR_LOCAL_VOTACAO, 
-                                    nome: l.NM_LOCAL 
-                                });
+        function processarLocais(locaisText) {
+            Papa.parse(locaisText, {
+                header: true,
+                complete: (results) => {
+                    console.log('CSV de locais parseado, linhas:', results.data.length);
+                    
+                    state.locaisGeo = results.data.filter(l => {
+                        const lat = parseFloat(l.LATITUDE);
+                        const lon = parseFloat(l.LONGITUDE);
+                        return !isNaN(lat) && !isNaN(lon) && l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO;
+                    });
+                    
+                    console.log('Locais com coordenadas válidas:', state.locaisGeo.length);
+                    
+                    results.data.forEach(l => {
+                        if (l.CD_MUNICIPIO && l.NR_LOCAL_VOTACAO && l.NM_LOCAL) {
+                            if (!state.locais.has(l.CD_MUNICIPIO)) {
+                                state.locais.set(l.CD_MUNICIPIO, []);
                             }
-                        });
-                        
-                        state.locaisCarregados = true;
-                        
-                        let totalLocais = 0;
-                        state.locais.forEach((locais, mun) => {
-                            totalLocais += locais.length;
-                        });
-                        console.log('✅ Locais processados:', {
-                            municipiosComLocais: state.locais.size,
-                            totalLocaisCadastrados: totalLocais,
-                            locaisGeorreferenciados: state.locaisGeo.length
-                        });
-                        
-                        if (map) {
-                            console.log('🔄 Forçando atualização do mapa com locais...');
-                            atualizarMapa();
+                            state.locais.get(l.CD_MUNICIPIO).push({ 
+                                codigo: l.NR_LOCAL_VOTACAO, 
+                                nome: l.NM_LOCAL 
+                            });
                         }
-                        
-                        if (state.municipioSelecionado) {
-                            atualizarListaLocais(state.municipioSelecionado);
-                        }
+                    });
+                    
+                    state.locaisCarregados = true;
+                    
+                    let totalLocais = 0;
+                    state.locais.forEach((locais, mun) => {
+                        totalLocais += locais.length;
+                    });
+                    console.log('✅ Locais processados:', {
+                        municipiosComLocais: state.locais.size,
+                        totalLocaisCadastrados: totalLocais,
+                        locaisGeorreferenciados: state.locaisGeo.length
+                    });
+                    
+                    if (map) {
+                        console.log('🔄 Forçando atualização do mapa com locais...');
+                        atualizarMapa();
                     }
-                });
-            } catch (error) {
-                console.error('❌ Erro ao carregar locais:', error);
-            }
+                    
+                    if (state.municipioSelecionado) {
+                        atualizarListaLocais(state.municipioSelecionado);
+                    }
+                }
+            });
         }
         
         function initMapa() {
@@ -1347,7 +1347,7 @@
             const anoAnterior = getAnoAnterior(state.ano);
             const zoom = map.getZoom();
             
-            // MUNICÍPIOS (sempre adicionados à camada de municípios)
+            // MUNICÍPIOS
             state.municipiosGeo.forEach((geo, cod) => {
                 try {
                     if (isNaN(geo.lat) || isNaN(geo.lon)) return;
@@ -1648,10 +1648,8 @@
             
             municipiosCache = [];
             
-            // Usar o Map de municípios (que veio do municipios.csv) para a lista
             state.municipios.forEach((nome, cod) => {
                 const votos = state.candidato.anos[state.ano]?.municipios[cod]?.votos || 0;
-                // Buscar coordenadas se disponíveis (para zoom no mapa)
                 const geo = state.municipiosGeo.get(cod);
                 
                 municipiosCache.push({ 
@@ -1675,7 +1673,6 @@
                 return;
             }
             
-            // Mostrar todos os municípios
             lista.innerHTML = filtrados.map(m => `
                 <div class="item-lista ${state.municipioSelecionado === m.cod ? 'selecionado' : ''}" 
                     onclick="selecionarMunicipio('${m.cod}', '${m.nome}')">
@@ -1719,7 +1716,6 @@
             
             filtrados.sort((a, b) => b.votos - a.votos);
             
-            // Mostrar todos os locais
             lista.innerHTML = filtrados.map(l => `
                 <div class="item-lista ${state.localSelecionado === l.cod ? 'selecionado' : ''}"
                     onclick="selecionarLocal('${codMun}', '${l.cod}', '${l.nome.replace(/'/g, "\\'")}', '${state.municipios.get(codMun)}')">
