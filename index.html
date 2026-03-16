@@ -431,6 +431,7 @@
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(5px);
             font-size: 0.9em;
+            max-height: 100%;
         }
         
         /* Legenda do mapa */
@@ -710,9 +711,9 @@
             configCandidatos: null,
             top10Deputados: null,
             candidatosDeputados: null,
-            municipios: new Map(),
+            municipios: new Map(),        // Lista completa de municípios (do municipios.csv)
             locais: new Map(),
-            municipiosGeo: new Map(),
+            municipiosGeo: new Map(),     // Municípios com coordenadas (do municipios_RS_geocodificado.csv)
             locaisGeo: [],
             ano: '2022',
             municipioSelecionado: null,
@@ -1123,34 +1124,49 @@
                     candidatosDeputados: deputadosConfig
                 });
                 
-                const municipiosText = await fetch(`${BASE_URL}/municipios_RS_geocodificado.csv`).then(r => r.text());
+                // CARREGAR MUNICÍPIOS DO ARQUIVO COMPLETO (municipios.csv)
+                const municipiosText = await fetch(`${BASE_URL}/municipios.csv`).then(r => r.text());
                 Papa.parse(municipiosText, {
                     header: true,
                     complete: (results) => {
                         results.data.forEach(m => {
                             if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
-                                const lat = parseFloat(m.LATITUDE);
-                                const lon = parseFloat(m.LONGITUDE);
-                                
-                                if (!isNaN(lat) && !isNaN(lon)) {
-                                    state.municipiosGeo.set(m.CD_MUNICIPIO, {
-                                        nome: m.NM_MUNICIPIO,
-                                        lat: lat,
-                                        lon: lon
-                                    });
-                                }
-                                // Adicionar também ao Map de municípios para a lista
+                                // Guardar no Map principal para a lista
                                 state.municipios.set(m.CD_MUNICIPIO, m.NM_MUNICIPIO);
                             }
                         });
-                        console.log('✅ Municípios carregados:', state.municipiosGeo.size);
-                        processarLocais();
-                        initMapa();
+                        console.log('✅ Municípios (lista completa) carregados:', state.municipios.size);
                         
-                        setTimeout(() => {
-                            atualizarListaMunicipios();
-                            selecionarEstadoInicial();
-                        }, 100);
+                        // CARREGAR MUNICÍPIOS GEOCODIFICADOS (para o mapa)
+                        const municipiosGeoText = await fetch(`${BASE_URL}/municipios_RS_geocodificado.csv`).then(r => r.text());
+                        Papa.parse(municipiosGeoText, {
+                            header: true,
+                            complete: (results2) => {
+                                results2.data.forEach(m => {
+                                    if (m.CD_MUNICIPIO && m.NM_MUNICIPIO) {
+                                        const lat = parseFloat(m.LATITUDE);
+                                        const lon = parseFloat(m.LONGITUDE);
+                                        
+                                        if (!isNaN(lat) && !isNaN(lon)) {
+                                            state.municipiosGeo.set(m.CD_MUNICIPIO, {
+                                                nome: m.NM_MUNICIPIO,
+                                                lat: lat,
+                                                lon: lon
+                                            });
+                                        }
+                                    }
+                                });
+                                console.log('✅ Municípios geocodificados carregados:', state.municipiosGeo.size);
+                                
+                                processarLocais();
+                                initMapa();
+                                
+                                setTimeout(() => {
+                                    atualizarListaMunicipios();
+                                    selecionarEstadoInicial();
+                                }, 100);
+                            }
+                        });
                     }
                 });
             } catch (error) {
@@ -1298,18 +1314,15 @@
                 const zoom = map.getZoom();
                 document.getElementById('nivelZoom').textContent = zoom;
                 
-                // Alternar entre camadas baseado no zoom
                 if (zoom >= 11) {
-                    // Zoom alto: mostra locais
                     if (map.hasLayer(camadaMunicipios)) {
                         map.removeLayer(camadaMunicipios);
                     }
                     if (!map.hasLayer(clusterLocais)) {
                         map.addLayer(clusterLocais);
                     }
-                    document.getElementById('camadaAtiva').textContent = 'Locais de Votação';
+                    document.getElementById('camadaAtiva').textContent = 'Locais + Municípios';
                 } else {
-                    // Zoom baixo: mostra municípios
                     if (map.hasLayer(clusterLocais)) {
                         map.removeLayer(clusterLocais);
                     }
@@ -1361,13 +1374,11 @@
             
             // LOCAIS DE VOTAÇÃO
             if (state.locaisCarregados) {
-                // Identificar municípios que têm locais
                 const municipiosComLocais = new Set();
                 state.locaisGeo.forEach(l => {
                     municipiosComLocais.add(l.CD_MUNICIPIO);
                 });
                 
-                // Adicionar locais de votação
                 state.locaisGeo.forEach(l => {
                     try {
                         const lat = parseFloat(l.LATITUDE);
@@ -1403,11 +1414,9 @@
                 });
                 
                 // ADICIONAR MUNICÍPIOS SEM LOCAIS À CAMADA DE LOCAIS
-                // para que apareçam quando estiver em zoom alto
                 if (zoom >= 11) {
                     state.municipiosGeo.forEach((geo, cod) => {
                         try {
-                            // Se o município NÃO tem locais, adicionar à camada de locais
                             if (!municipiosComLocais.has(cod)) {
                                 if (isNaN(geo.lat) || isNaN(geo.lon)) return;
                                 
@@ -1415,7 +1424,6 @@
                                 if (votos > 0) {
                                     const votosAnt = anoAnterior ? (state.candidato.anos[anoAnterior]?.municipios[cod]?.votos || 0) : 0;
                                     
-                                    // Usar o MESMO estilo dos locais
                                     var marker = L.circleMarker([geo.lat, geo.lon], {
                                         radius: getTamanhoCirculo(votos, 'municipio'),
                                         color: '#333',
@@ -1516,6 +1524,8 @@
             const geo = state.municipiosGeo.get(cod);
             if (geo && map) {
                 map.setView([geo.lat, geo.lon], 11, { animate: true });
+            } else {
+                map.setView([-30.5, -53], 7, { animate: true });
             }
         }
         
@@ -1631,21 +1641,25 @@
             const lista = document.getElementById('listaMunicipios');
             if (!lista) return;
             
-            if (!state.candidato) {
+            if (!state.candidato || state.municipios.size === 0) {
                 lista.innerHTML = '<div class="mensagem-ajuda">Carregando...</div>';
                 return;
             }
             
             municipiosCache = [];
-            state.municipiosGeo.forEach((geo, cod) => {
+            
+            // Usar o Map de municípios (que veio do municipios.csv) para a lista
+            state.municipios.forEach((nome, cod) => {
                 const votos = state.candidato.anos[state.ano]?.municipios[cod]?.votos || 0;
-                // REMOVI O FILTRO DE votos > 0 - agora mostra todos os municípios
+                // Buscar coordenadas se disponíveis (para zoom no mapa)
+                const geo = state.municipiosGeo.get(cod);
+                
                 municipiosCache.push({ 
                     cod, 
-                    nome: geo.nome, 
-                    votos, 
-                    lat: geo.lat, 
-                    lon: geo.lon 
+                    nome, 
+                    votos,
+                    lat: geo?.lat || null,
+                    lon: geo?.lon || null
                 });
             });
             
@@ -1684,7 +1698,6 @@
             state.locaisGeo.forEach(l => {
                 if (l.CD_MUNICIPIO !== codMun) return;
                 const votos = state.candidato?.anos[state.ano]?.municipios[codMun]?.locais?.[l.NR_LOCAL_VOTACAO] || 0;
-                // REMOVI O FILTRO DE votos > 0 - agora mostra todos os locais
                 locais.push({
                     cod: l.NR_LOCAL_VOTACAO,
                     nome: l.NM_LOCAL,
